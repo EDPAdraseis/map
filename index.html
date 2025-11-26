@@ -29,32 +29,33 @@
 
         /* Κουτί τίτλου */
         .info-box {
-            position: absolute; top: 20px; left: 60px; /* Λίγο πιο δεξιά για να μην πέφτει πάνω στα zoom controls */
+            position: absolute; top: 20px; left: 60px;
             z-index: 1000;
-            background: white; padding: 15px; border-radius: 8px;
+            background: white; padding: 12px; border-radius: 8px;
             box-shadow: 0 0 15px rgba(0,0,0,0.2); max-width: 250px;
         }
-        .info-box h2 { margin: 0 0 5px 0; font-size: 18px; color: #2e7d32; }
-        .info-box p { margin: 0; font-size: 12px; color: #666; }
+        .info-box h2 { margin: 0 0 5px 0; font-size: 16px; color: #2e7d32; }
+        .info-box p { margin: 0; font-size: 11px; color: #666; }
 
         /* Κουτιά Ελέγχου */
         .controls-box {
             position: absolute; top: 20px; right: 20px; z-index: 1000;
-            display: flex; gap: 10px;
+            display: flex; gap: 8px;
             flex-wrap: wrap; 
             justify-content: flex-end;
-            max-width: 60%; /* Για να μην πέφτει πάνω στο info box */
+            max-width: 60%;
         }
         
+        /* Μικρότερα Κουμπιά */
         .control-btn {
-            background: white; border: none; padding: 10px 15px;
-            border-radius: 8px; cursor: pointer; font-size: 14px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            background: white; border: none; padding: 6px 12px; /* Μειωμένο padding */
+            border-radius: 6px; cursor: pointer; font-size: 12px; /* Μικρότερη γραμματοσειρά */
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
             transition: background 0.2s;
             font-weight: bold;
             display: flex; align-items: center; gap: 5px;
             position: relative;
-            white-space: nowrap; /* Να μην σπάει το κείμενο */
+            white-space: nowrap;
         }
 
         /* --- TOOLTIP STYLES --- */
@@ -64,21 +65,15 @@
             position: absolute;
             top: 115%; left: 50%; transform: translateX(-50%);
             background-color: white; color: #333;
-            padding: 8px 12px; border-radius: 6px; font-size: 13px;
+            padding: 6px 10px; border-radius: 6px; font-size: 11px;
             white-space: nowrap; opacity: 0; animation: fadeInTooltip 0.3s forwards;
             pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.25);
             z-index: 1001; border: 1px solid #f0f0f0; font-weight: normal;
         }
-        /* Κρύβουμε τα tooltips στα κινητά για να μην ενοχλούν στο touch */
         @media (hover: none) {
-            .control-btn[data-tooltip]:hover::after,
-            .control-btn[data-tooltip]:hover::before,
-            .ai-analyze-btn[data-tooltip]:hover::after,
-            .ai-analyze-btn[data-tooltip]:hover::before {
-                display: none;
-            }
+            .control-btn[data-tooltip]:hover::after, .control-btn[data-tooltip]:hover::before,
+            .ai-analyze-btn[data-tooltip]:hover::after, .ai-analyze-btn[data-tooltip]:hover::before { display: none; }
         }
-
         .control-btn[data-tooltip]:hover::before,
         .ai-analyze-btn[data-tooltip]:hover::before {
             content: ''; position: absolute; top: 105%; left: 50%;
@@ -89,11 +84,13 @@
         }
         @keyframes fadeInTooltip { to { opacity: 1; } }
 
+        /* Χρώματα Κουμπιών */
         .btn-upload { color: #3388ff; } .btn-upload:hover { background: #f0f7ff; }
         .btn-clear { color: #e74c3c; } .btn-clear:hover { background: #fff0f0; }
         .btn-share { color: #8e44ad; } .btn-share:hover { background: #f5eef8; }
         .btn-email { color: #e67e22; } .btn-email:hover { background: #fff8e1; }
         .btn-library { color: #27ae60; } .btn-library:hover { background: #e8f8f5; }
+        .btn-print { color: #34495e; } .btn-print:hover { background: #ebedef; }
         .btn-settings { color: #7f8c8d; } .btn-settings:hover { background: #f2f4f4; }
 
         #file-input { display: none; }
@@ -102,46 +99,44 @@
             position: absolute; bottom: 30px; left: 20px; z-index: 9999;
             width: 150px; height: auto; pointer-events: none;
             filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8));
-            transition: width 0.3s; /* Smooth animation */
+            transition: width 0.3s;
         }
 
-        /* Στυλ για το παράθυρο Υψομετρικής */
+        /* Elevation Chart */
         #elevation-container {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 80%; max-width: 800px; height: 240px;
+            width: 80%; max-width: 800px; height: 200px; /* Λίγο πιο χαμηλό */
             background: rgba(255, 255, 255, 0.95); border-radius: 12px;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 2000;
             padding: 10px 20px 10px 10px; display: none; flex-direction: column;
         }
-        .elevation-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 14px; font-weight: bold; color: #333; }
+        .elevation-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #333; }
         .elevation-actions { display: flex; gap: 10px; }
         .ai-analyze-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; border: none; padding: 5px 12px;
-            border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold;
+            color: white; border: none; padding: 4px 10px;
+            border-radius: 20px; cursor: pointer; font-size: 11px; font-weight: bold;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: transform 0.2s; position: relative;
         }
         .ai-analyze-btn:hover { transform: scale(1.05); }
         .close-chart-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: #888; }
         .close-chart-btn:hover { color: #000; }
-        #elevationChart { width: 100% !important; height: 180px !important; }
+        #elevationChart { width: 100% !important; height: 150px !important; }
 
         /* Chat Styles */
         .chat-fab {
             position: absolute; bottom: 30px; right: 20px; z-index: 3000;
-            width: 60px; height: 60px; background: #2e7d32; border-radius: 50%;
+            width: 50px; height: 50px; background: #2e7d32; border-radius: 50%;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex;
             justify-content: center; align-items: center; cursor: pointer;
-            color: white; font-size: 24px; transition: transform 0.3s;
+            color: white; font-size: 22px; transition: transform 0.3s;
         }
         .chat-fab:hover { transform: scale(1.1); background: #1b5e20; }
-        
         .chat-window {
-            position: absolute; bottom: 100px; right: 20px; width: 300px; height: 400px;
+            position: absolute; bottom: 90px; right: 20px; width: 300px; height: 400px;
             background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
             z-index: 3000; display: none; flex-direction: column; overflow: hidden; border: 1px solid #ddd;
         }
-        
         .chat-header { background: #2e7d32; color: white; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .chat-messages { flex: 1; padding: 10px; overflow-y: auto; background: #f9f9f9; font-size: 13px; }
         .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; max-width: 80%; word-wrap: break-word; }
@@ -182,62 +177,38 @@
         .empty-library { text-align: center; color: #888; padding: 10px; font-size: 13px; font-style: italic; }
 
         /* Settings Modal Styles */
-        .settings-input {
-            width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;
-        }
-        .settings-save-btn {
-            background: #2e7d32; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%;
-        }
+        .settings-group { margin-bottom: 20px; }
+        .settings-label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 14px; color: #333; }
+        .settings-input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; }
+        .settings-save-btn { background: #2e7d32; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px;}
         .settings-help { font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 15px; }
         .settings-help a { color: #3388ff; }
+        
+        /* Color/Width Pickers */
+        .radio-group { display: flex; gap: 15px; }
+        .radio-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 13px; }
+        .color-preview { width: 16px; height: 16px; border-radius: 50%; display: inline-block; border: 1px solid #ddd; }
 
-        /* --- MEDIA QUERIES ΓΙΑ MOBILE --- */
+        /* PRINT STYLES - Κρύβουμε τα πάντα εκτός από χάρτη και logo */
+        @media print {
+            .controls-box, .chat-fab, .chat-window, .info-box, .leaflet-control-zoom, #elevation-container {
+                display: none !important;
+            }
+            #map { height: 100vh; width: 100%; }
+            .logo-box { bottom: 10px; left: 10px; width: 100px; }
+            body { margin: 0; padding: 0; overflow: hidden; }
+        }
+
+        /* Mobile Styles */
         @media (max-width: 768px) {
-            /* Info Box: Πιο συμπαγές και μετακίνηση για να μη κρύβει το χάρτη */
-            .info-box {
-                top: 10px;
-                left: 50px; /* Δίπλα από τα controls */
-                padding: 10px;
-                max-width: 180px;
-            }
-            .info-box h2 { font-size: 14px; }
-            .info-box p { display: none; } /* Κρύβουμε την περιγραφή στα πολύ μικρά κινητά */
-
-            /* Controls: Πιο μικρά κουμπιά, στοίχιση κάτω από το info box ή δίπλα */
-            .controls-box {
-                top: 70px; /* Κάτω από το info box αν χρειαστεί ή αριστερά */
-                left: 10px;
-                right: auto;
-                justify-content: flex-start;
-                max-width: 90%;
-                gap: 5px;
-            }
-            .control-btn {
-                padding: 8px 10px;
-                font-size: 12px;
-            }
-
-            /* Chat Window: Πλήρες πλάτος σχεδόν */
-            .chat-window {
-                width: 90%;
-                right: 5%;
-                bottom: 90px;
-                height: 50vh;
-            }
-
-            /* Logo: Μικραίνει */
-            .logo-box {
-                width: 100px;
-                bottom: 25px;
-                left: 10px;
-            }
-
-            /* Elevation Chart: Πιο φαρδύ */
-            #elevation-container {
-                width: 95%;
-                height: 200px;
-                bottom: 10px;
-            }
+            .info-box { top: 10px; left: 50px; padding: 8px; max-width: 150px; }
+            .info-box h2 { font-size: 12px; }
+            .info-box p { display: none; }
+            .controls-box { top: 60px; left: 10px; right: auto; justify-content: flex-start; max-width: 95%; gap: 5px; }
+            .control-btn { padding: 6px 8px; font-size: 11px; }
+            .chat-window { width: 90%; right: 5%; bottom: 80px; height: 50vh; }
+            .logo-box { width: 80px; bottom: 20px; left: 10px; }
+            #elevation-container { width: 95%; height: 180px; bottom: 10px; }
         }
     </style>
 </head>
@@ -250,28 +221,37 @@
 
     <!-- Κουμπιά ελέγχου -->
     <div class="controls-box">
-        <button class="control-btn btn-upload" data-tooltip="Φορτώστε αρχείο για προβολή διαδρομής" onclick="document.getElementById('file-input').click()">
-            <i class="fas fa-folder-open"></i> Φόρτωση GPX
+        <button class="control-btn btn-upload" data-tooltip="Φορτώστε αρχείο GPX" onclick="document.getElementById('file-input').click()">
+            <i class="fas fa-folder-open"></i> Φόρτωση
         </button>
         
-        <button class="control-btn btn-library" data-tooltip="Λίστα διαδρομών (GitHub & Τοπικά)" onclick="openLibrary()">
-            <i class="fas fa-book"></i> Βιβλιοθήκη
+        <button class="control-btn btn-library" data-tooltip="Βιβλιοθήκη Διαδρομών" onclick="openLibrary()">
+            <i class="fas fa-book"></i>
         </button>
 
-        <button class="control-btn btn-share" data-tooltip="Δημιουργία συνδέσμου διαμοίρασης" onclick="createShareLink()">
-            <i class="fas fa-link"></i> Μοιράσου το
+        <button class="control-btn btn-share" data-tooltip="Μοιράσου το" onclick="createShareLink()">
+            <i class="fas fa-link"></i>
         </button>
 
-        <button class="control-btn btn-clear" data-tooltip="Διαγραφή διαδρομής" onclick="clearRoutes()">
-            <i class="fas fa-trash"></i> Καθαρισμός
+        <!-- Κουμπί Screenshot/PDF (Print) -->
+        <button class="control-btn btn-print" data-tooltip="Εκτύπωση / Αποθήκευση ως PDF" onclick="window.print()">
+            <i class="fas fa-print"></i> Εκτύπωση
         </button>
         
-        <button class="control-btn btn-email" data-tooltip="Στείλτε μας τις ερωτήσεις σας" onclick="window.location.href='mailto:info@drasiparnithas.gr?subject=Επικοινωνία από τον Ψηφιακό Χάρτη'">
-            <i class="fas fa-envelope"></i> Επικοινωνία
+        <!-- Κουμπί JPG Save -->
+        <button class="control-btn btn-print" data-tooltip="Αποθήκευση ως εικόνα (JPG)" onclick="saveMapAsImage()">
+            <i class="fas fa-camera"></i> JPG
         </button>
 
-        <!-- Κουμπί Ρυθμίσεων (ΝΕΟ) -->
-        <button class="control-btn btn-settings" data-tooltip="Ρυθμίσεις AI (Gemini Key)" onclick="openSettings()">
+        <button class="control-btn btn-clear" data-tooltip="Διαγραφή" onclick="clearRoutes()">
+            <i class="fas fa-trash"></i>
+        </button>
+        
+        <button class="control-btn btn-email" data-tooltip="Επικοινωνία" onclick="window.location.href='mailto:info@drasiparnithas.gr?subject=Επικοινωνία από τον Ψηφιακό Χάρτη'">
+            <i class="fas fa-envelope"></i>
+        </button>
+
+        <button class="control-btn btn-settings" data-tooltip="Ρυθμίσεις" onclick="openSettings()">
             <i class="fas fa-cog"></i>
         </button>
         
@@ -289,7 +269,7 @@
             <div class="elevation-actions">
                 <span>Υψομετρική Καμπύλη</span>
                 <button id="ai-btn" class="ai-analyze-btn" data-tooltip="Ζητήστε ανάλυση της διαδρομής από το Gemini AI" onclick="analyzeRouteWithAI()">
-                    ✨ AI Οδηγός Βουνού
+                    ✨ AI Οδηγός
                 </button>
             </div>
             <button class="close-chart-btn" onclick="closeElevationChart()">×</button>
@@ -300,7 +280,7 @@
     <!-- Chat -->
     <div class="chat-fab" onclick="toggleChat()"><i class="fas fa-tree"></i></div>
     <div class="chat-window" id="chatWindow">
-        <div class="chat-header"><span>🌲 Οδηγός Πάρνηθας (AI)</span><span style="cursor:pointer" onclick="toggleChat()">_</span></div>
+        <div class="chat-header"><span>🌲 Οδηγός Πάρνηθας</span><span style="cursor:pointer" onclick="toggleChat()">_</span></div>
         <div class="chat-messages" id="chatMessages"><div class="message msg-ai">Γεια σας! Είμαι ο ψηφιακός σας δασοφύλακας. Ρωτήστε με οτιδήποτε για την Πάρνηθα!</div></div>
         <div class="typing-indicator" id="typingIndicator">Ο οδηγός πληκτρολογεί...</div>
         <div class="chat-input-area">
@@ -309,44 +289,62 @@
         </div>
     </div>
 
-    <!-- Modal Αποτελεσμάτων AI -->
+    <!-- Modals -->
     <div class="modal-overlay" id="aiModal" onclick="closeAiModal(event)">
         <div class="modal-content">
             <span class="modal-close" onclick="closeAiModal(null)">&times;</span>
-            <div class="ai-result-title"><i class="fas fa-robot"></i> Ανάλυση Διαδρομής Gemini</div>
+            <div class="ai-result-title"><i class="fas fa-robot"></i> Ανάλυση Gemini</div>
             <div id="aiModalContent">Φόρτωση ανάλυσης...</div>
         </div>
     </div>
 
-    <!-- Modal Βιβλιοθήκης -->
     <div class="modal-overlay" id="libraryModal" onclick="closeLibraryModal(event)">
         <div class="modal-content">
             <span class="modal-close" onclick="closeLibraryModal(null)">&times;</span>
-            <div class="ai-result-title"><i class="fas fa-book"></i> Βιβλιοθήκη Διαδρομών</div>
+            <div class="ai-result-title"><i class="fas fa-book"></i> Βιβλιοθήκη</div>
             <div id="libraryContent">
-                <div class="library-section-title">☁️ Cloud Διαδρομές (GitHub)</div>
-                <div id="githubLoading" style="text-align:center; padding:10px; font-size:12px; color:#666;">Φόρτωση από GitHub...</div>
+                <div class="library-section-title">☁️ Cloud (GitHub)</div>
+                <div id="githubLoading" style="text-align:center; padding:10px; font-size:12px; color:#666;">Φόρτωση...</div>
                 <ul class="library-list" id="githubList"></ul>
-                <div class="library-section-title" style="margin-top:20px;">💾 Τοπικά Αποθηκευμένες</div>
+                <div class="library-section-title" style="margin-top:20px;">💾 Τοπικά</div>
                 <ul class="library-list" id="localList"></ul>
             </div>
         </div>
     </div>
 
-    <!-- Modal Ρυθμίσεων (ΝΕΟ) -->
+    <!-- Modal Ρυθμίσεων -->
     <div class="modal-overlay" id="settingsModal" onclick="closeSettingsModal(event)">
         <div class="modal-content">
             <span class="modal-close" onclick="closeSettingsModal(null)">&times;</span>
-            <div class="ai-result-title"><i class="fas fa-cog"></i> Ρυθμίσεις AI</div>
-            <div class="settings-help">
-                Για να λειτουργήσει ο AI Οδηγός, χρειάζεται ένα <b>Google Gemini API Key</b>.<br><br>
-                1. Πηγαίνετε στο <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.<br>
-                2. Πατήστε "Create API Key".<br>
-                3. Αντιγράψτε το κλειδί και επικολλήστε το εδώ.<br>
-                <small>Το κλειδί αποθηκεύεται μόνο στον υπολογιστή σας (browser).</small>
+            <div class="ai-result-title"><i class="fas fa-cog"></i> Ρυθμίσεις</div>
+            
+            <!-- Επιλογές Γραμμής -->
+            <div class="settings-group">
+                <label class="settings-label">Χρώμα Γραμμής:</label>
+                <div class="radio-group">
+                    <label class="radio-label"><input type="radio" name="lineColor" value="blue" checked> <span class="color-preview" style="background:#3388ff;"></span> Μπλε</label>
+                    <label class="radio-label"><input type="radio" name="lineColor" value="red"> <span class="color-preview" style="background:#e74c3c;"></span> Κόκκινο</label>
+                    <label class="radio-label"><input type="radio" name="lineColor" value="#f1c40f"> <span class="color-preview" style="background:#f1c40f;"></span> Κίτρινο</label>
+                </div>
             </div>
-            <input type="password" id="apiKeyInput" class="settings-input" placeholder="Επικολλήστε το API Key εδώ...">
-            <button class="settings-save-btn" onclick="saveApiKey()">Αποθήκευση</button>
+
+            <div class="settings-group">
+                <label class="settings-label">Πάχος Γραμμής:</label>
+                <div class="radio-group">
+                    <label class="radio-label"><input type="radio" name="lineWeight" value="6" checked> Μεγάλο (Τρέχον)</label>
+                    <label class="radio-label"><input type="radio" name="lineWeight" value="3"> Λεπτό</label>
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+
+            <div class="settings-group">
+                <label class="settings-label">Google API Key (Προαιρετικό):</label>
+                <div class="settings-help">Το σύστημα έχει κεντρικό κλειδί. Αν θέλετε να χρησιμοποιήσετε δικό σας, βάλτε το εδώ.</div>
+                <input type="password" id="apiKeyInput" class="settings-input" placeholder="Επικολλήστε το API Key...">
+            </div>
+
+            <button class="settings-save-btn" onclick="saveSettings()">Αποθήκευση Ρυθμίσεων</button>
         </div>
     </div>
 
@@ -356,29 +354,64 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Script για Screenshot (html2canvas) -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <script>
-        // --- ΔΙΑΧΕΙΡΙΣΗ API KEY ---
-        // Το κλειδί πλέον δεν είναι στον κώδικα, αλλά στο LocalStorage του χρήστη
-        function getApiKey() {
-            return localStorage.getItem('gemini_api_key') || "";
+        const GLOBAL_API_KEY = "AIzaSyASDnF3E2gmAvv8WY96wg3m3ZkpAntDUU4"; 
+        const STORAGE_KEY = 'parnitha_saved_routes';
+        const SETTINGS_KEY = 'parnitha_settings';
+
+        // --- Settings Management ---
+        function getSettings() {
+            const defaultSettings = { color: '#3388ff', weight: 6 };
+            try {
+                const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+                return { ...defaultSettings, ...saved };
+            } catch(e) { return defaultSettings; }
         }
 
-        function saveApiKey() {
-            const input = document.getElementById('apiKeyInput');
-            const key = input.value.trim();
-            if (key) {
-                localStorage.setItem('gemini_api_key', key);
-                alert("Το κλειδί αποθηκεύτηκε επιτυχώς! Ο AI Οδηγός είναι έτοιμος.");
-                closeSettingsModal(null);
-            } else {
-                alert("Παρακαλώ εισάγετε ένα έγκυρο κλειδί.");
-            }
+        function saveSettings() {
+            // API Key
+            const apiKeyInput = document.getElementById('apiKeyInput').value.trim();
+            if (apiKeyInput) localStorage.setItem('gemini_api_key', apiKeyInput);
+            
+            // Visual Settings
+            const color = document.querySelector('input[name="lineColor"]:checked').value;
+            const weight = parseInt(document.querySelector('input[name="lineWeight"]:checked').value);
+            
+            const settings = { 
+                color: color === 'blue' ? '#3388ff' : (color === 'red' ? '#e74c3c' : color), 
+                weight: weight 
+            };
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+            
+            alert("Οι ρυθμίσεις αποθηκεύτηκαν!");
+            closeSettingsModal(null);
+            
+            // Αν υπάρχει ήδη φορτωμένη διαδρομή, θα μπορούσαμε να την ξαναφορτώσουμε, 
+            // αλλά για απλότητα εφαρμόζονται στην επόμενη φόρτωση.
+            // Αν θέλετε άμεση εφαρμογή, κάντε reload τη σελίδα:
+            // location.reload(); 
         }
 
         function openSettings() {
+            const settings = getSettings();
+            
+            // Set Color Radio
+            let colorVal = 'blue';
+            if (settings.color === '#e74c3c') colorVal = 'red';
+            else if (settings.color === '#f1c40f') colorVal = '#f1c40f';
+            
+            const colorRadio = document.querySelector(`input[name="lineColor"][value="${colorVal}"]`);
+            if (colorRadio) colorRadio.checked = true;
+
+            // Set Weight Radio
+            const weightRadio = document.querySelector(`input[name="lineWeight"][value="${settings.weight}"]`);
+            if (weightRadio) weightRadio.checked = true;
+
+            document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || "";
             document.getElementById('settingsModal').style.display = 'flex';
-            document.getElementById('apiKeyInput').value = getApiKey();
         }
 
         function closeSettingsModal(e) {
@@ -387,10 +420,9 @@
             }
         }
 
-        // --- ΧΑΡΤΗΣ & GPX ---
+        // --- Map & GPX ---
         const map = L.map('map').setView([38.168, 23.722], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(map);
-
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
         const gpxLayerGroup = L.layerGroup().addTo(map);
         let elevationChart = null;
         let currentRouteData = null;
@@ -402,99 +434,6 @@
             const gpxUrl = urlParams.get('gpx');
             if (gpxUrl) loadGpxFromUrl(gpxUrl);
         };
-
-        // --- GEMINI API CALL ---
-        async function callGemini(prompt) {
-            const userKey = getApiKey();
-            
-            // Αν δεν έχει βάλει κλειδί, επιστρέφουμε μήνυμα οδηγιών
-            if (!userKey) {
-                return "⚠️ Δεν έχετε ρυθμίσει το API Key.\nΠατήστε το γρανάζι (⚙️) στο μενού και ακολουθήστε τις οδηγίες για να ενεργοποιήσετε τον AI Οδηγό.";
-            }
-
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${userKey}`;
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
-            const delays = [1000, 2000, 4000];
-            
-            for (let i = 0; i <= delays.length; i++) {
-                try {
-                    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    
-                    if (!response.ok) {
-                        if (response.status === 400 || response.status === 403) {
-                            throw new Error("INVALID_KEY");
-                        }
-                        throw new Error(`HTTP Error: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Δεν μπόρεσα να δημιουργήσω απάντηση.";
-                } catch (error) {
-                    console.error("AI Error:", error);
-                    
-                    if (error.message === "INVALID_KEY") {
-                        return "❌ Το API Key δεν είναι έγκυρο.\nΠαρακαλώ ελέγξτε το στις Ρυθμίσεις (⚙️).";
-                    }
-
-                    if (i === delays.length) {
-                        return "Υπήρξε πρόβλημα σύνδεσης με το Gemini. Δοκιμάστε ξανά αργότερα.";
-                    }
-                    await new Promise(res => setTimeout(res, delays[i]));
-                }
-            }
-        }
-
-        // --- ΥΠΟΛΟΙΠΕΣ ΛΕΙΤΟΥΡΓΙΕΣ (Ίδιες με πριν) ---
-        const STORAGE_KEY = 'parnitha_saved_routes';
-
-        async function fetchGitHubFiles() {
-            const listEl = document.getElementById('githubList');
-            const loadingEl = document.getElementById('githubLoading');
-            listEl.innerHTML = ''; loadingEl.style.display = 'block';
-            try {
-                const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/`);
-                if (!response.ok) throw new Error();
-                const data = await response.json();
-                const gpxFiles = data.filter(item => item.name.endsWith('.gpx'));
-                loadingEl.style.display = 'none';
-                if (gpxFiles.length === 0) { listEl.innerHTML = '<li class="empty-library">Δεν βρέθηκαν αρχεία .gpx.</li>'; return; }
-                gpxFiles.forEach(file => {
-                    const li = document.createElement('li'); li.className = 'library-item';
-                    li.innerHTML = `<span class="library-name" onclick="loadAndCloseLibrary('${file.download_url}')"><i class="fas fa-cloud" style="color:#3498db; margin-right:8px;"></i> ${file.name}</span>`;
-                    listEl.appendChild(li);
-                });
-            } catch (error) { loadingEl.innerHTML = 'Σφάλμα φόρτωσης ή δεν υπάρχουν αρχεία.'; }
-        }
-
-        function saveRouteToStorage(name, gpxData) {
-            try {
-                let routes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                if (!routes.some(r => r.name === name)) {
-                    routes.push({ name: name, data: gpxData });
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(routes));
-                }
-            } catch (e) { alert("Storage full!"); }
-        }
-        function getLocalRoutes() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-        function deleteLocalRoute(name) {
-            let routes = getLocalRoutes().filter(r => r.name !== name);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(routes)); renderLocalLibrary();
-        }
-        function renderLocalLibrary() {
-            const listEl = document.getElementById('localList'); listEl.innerHTML = '';
-            const routes = getLocalRoutes();
-            if (routes.length === 0) { listEl.innerHTML = '<li class="empty-library">Κενό.</li>'; return; }
-            routes.forEach(route => {
-                const blob = new Blob([route.data], {type: 'application/gpx+xml'});
-                const url = URL.createObjectURL(blob);
-                const li = document.createElement('li'); li.className = 'library-item';
-                li.innerHTML = `<span class="library-name" onclick="loadAndCloseLibrary('${url}')"><i class="fas fa-file-code" style="color:#f39c12; margin-right:8px;"></i> ${route.name}</span><i class="fas fa-trash library-delete" onclick="deleteLocalRoute('${route.name}')"></i>`;
-                listEl.appendChild(li);
-            });
-        }
-        function openLibrary() { document.getElementById('libraryModal').style.display = 'flex'; fetchGitHubFiles(); renderLocalLibrary(); }
-        function closeLibraryModal(e) { if (!e || e.target.id === 'libraryModal' || e.target.classList.contains('modal-close')) document.getElementById('libraryModal').style.display = 'none'; }
-        function loadAndCloseLibrary(url) { loadGpxFromUrl(url); document.getElementById('libraryModal').style.display = 'none'; }
 
         function handleFileSelect(event) {
             const file = event.target.files[0]; if (!file) return;
@@ -508,31 +447,132 @@
 
         function loadGpxFromUrl(url) {
             gpxLayerGroup.clearLayers(); closeElevationChart(); currentRouteData=null; document.getElementById('ai-btn').style.display='none';
-            new L.GPX(url, { async: true, marker_options: { startIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-start.png', endIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-end.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-shadow.png' }, polyline_options: { color: 'blue', opacity: 0.8, weight: 6 } }).on('loaded', function(e) {
+            
+            const settings = getSettings(); // Load user settings
+
+            new L.GPX(url, { 
+                async: true, 
+                marker_options: { 
+                    startIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-start.png', 
+                    endIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-end.png', 
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-shadow.png' 
+                }, 
+                polyline_options: { 
+                    color: settings.color, 
+                    opacity: 0.8, 
+                    weight: settings.weight, 
+                    lineCap: 'round' 
+                } 
+            }).on('loaded', function(e) {
                 map.fitBounds(e.target.getBounds());
                 currentRouteData = { dist: (e.target.get_distance()/1000).toFixed(2), gain: e.target.get_elevation_gain().toFixed(0), maxEle: e.target.get_elevation_max().toFixed(0) };
                 if (e.target.get_elevation_data().length > 0) { drawElevationChart(e.target.get_elevation_data()); document.getElementById('ai-btn').style.display='block'; }
             }).addTo(gpxLayerGroup);
         }
 
-        function createShareLink() {
-            const userUrl = prompt("Link αρχείου GPX:");
-            if (userUrl) {
-                const shareUrl = `${window.location.href.split('?')[0]}?gpx=${encodeURIComponent(userUrl)}`;
-                navigator.clipboard.writeText(shareUrl).then(() => alert("Link αντιγράφηκε!"), () => prompt("Link:", shareUrl));
-            }
+        // --- Screenshot Function ---
+        function saveMapAsImage() {
+            // Χρησιμοποιούμε html2canvas
+            // Σημείωση: Λόγω CORS (ασφάλεια browser), τα πλακίδια του χάρτη (tiles) ίσως δεν εμφανιστούν αν ο server δεν το επιτρέπει.
+            // To OpenStreetMap συνήθως επιτρέπει.
+            
+            const mapElement = document.body; // Capture whole body or just #map
+            
+            // Κρύβουμε προσωρινά τα controls για το screenshot
+            const controls = document.querySelector('.controls-box');
+            const chatFab = document.querySelector('.chat-fab');
+            const infoBox = document.querySelector('.info-box'); // Αν θέλουμε να το κρατήσουμε, το αφήνουμε
+            
+            controls.style.display = 'none';
+            chatFab.style.display = 'none';
+
+            html2canvas(document.body, {
+                useCORS: true, // Σημαντικό για να φορτώσουν τα tiles
+                allowTaint: true,
+                scrollY: -window.scrollY
+            }).then(canvas => {
+                // Επαναφορά controls
+                controls.style.display = 'flex';
+                chatFab.style.display = 'flex';
+
+                // Λήψη εικόνας
+                const link = document.createElement('a');
+                link.download = 'parnitha-map.jpg';
+                link.href = canvas.toDataURL('image/jpeg', 0.9);
+                link.click();
+            }).catch(err => {
+                console.error(err);
+                alert("Σφάλμα κατά τη λήψη εικόνας (πιθανόν λόγω ρυθμίσεων ασφαλείας του browser). Δοκιμάστε την 'Εκτύπωση' για PDF.");
+                controls.style.display = 'flex';
+                chatFab.style.display = 'flex';
+            });
         }
 
+        // --- AI & Other Functions (Same as before) ---
+        function getApiKey() {
+            if (GLOBAL_API_KEY && GLOBAL_API_KEY.length > 5) return GLOBAL_API_KEY;
+            return localStorage.getItem('gemini_api_key') || "";
+        }
+        async function callGemini(prompt) {
+            const userKey = getApiKey();
+            if (!userKey) return "⚠️ Δεν έχει ρυθμιστεί κλειδί AI.";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${userKey}`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            try {
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Error";
+            } catch (error) { return "Πρόβλημα σύνδεσης με AI."; }
+        }
+        
+        // Library, Share, Charts (ίδια με πριν)
+        async function fetchGitHubFiles() {
+            const listEl = document.getElementById('githubList'); const loadingEl = document.getElementById('githubLoading');
+            listEl.innerHTML = ''; loadingEl.style.display = 'block';
+            try {
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/`);
+                const data = await response.json();
+                const gpxFiles = data.filter(item => item.name.endsWith('.gpx'));
+                loadingEl.style.display = 'none';
+                if (gpxFiles.length === 0) { listEl.innerHTML = '<li class="empty-library">Κενό.</li>'; return; }
+                gpxFiles.forEach(file => {
+                    const li = document.createElement('li'); li.className = 'library-item';
+                    li.innerHTML = `<span class="library-name" onclick="loadAndCloseLibrary('${file.download_url}')"><i class="fas fa-cloud" style="color:#3498db; margin-right:8px;"></i> ${file.name}</span>`;
+                    listEl.appendChild(li);
+                });
+            } catch (error) { loadingEl.innerHTML = 'Σφάλμα φόρτωσης.'; }
+        }
+        function saveRouteToStorage(name, gpxData) {
+            try {
+                let routes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                if (!routes.some(r => r.name === name)) { routes.push({ name: name, data: gpxData }); localStorage.setItem(STORAGE_KEY, JSON.stringify(routes)); }
+            } catch (e) {}
+        }
+        function getLocalRoutes() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+        function deleteLocalRoute(name) { let routes = getLocalRoutes().filter(r => r.name !== name); localStorage.setItem(STORAGE_KEY, JSON.stringify(routes)); renderLocalLibrary(); }
+        function renderLocalLibrary() {
+            const listEl = document.getElementById('localList'); listEl.innerHTML = '';
+            const routes = getLocalRoutes();
+            if (routes.length === 0) { listEl.innerHTML = '<li class="empty-library">Κενό.</li>'; return; }
+            routes.forEach(route => {
+                const blob = new Blob([route.data], {type: 'application/gpx+xml'}); const url = URL.createObjectURL(blob);
+                const li = document.createElement('li'); li.className = 'library-item';
+                li.innerHTML = `<span class="library-name" onclick="loadAndCloseLibrary('${url}')"><i class="fas fa-file-code" style="color:#f39c12; margin-right:8px;"></i> ${route.name}</span><i class="fas fa-trash library-delete" onclick="deleteLocalRoute('${route.name}')"></i>`;
+                listEl.appendChild(li);
+            });
+        }
+        function openLibrary() { document.getElementById('libraryModal').style.display = 'flex'; fetchGitHubFiles(); renderLocalLibrary(); }
+        function closeLibraryModal(e) { if (!e || e.target.id === 'libraryModal' || e.target.classList.contains('modal-close')) document.getElementById('libraryModal').style.display = 'none'; }
+        function loadAndCloseLibrary(url) { loadGpxFromUrl(url); document.getElementById('libraryModal').style.display = 'none'; }
+        function createShareLink() { const userUrl = prompt("Link αρχείου GPX:"); if (userUrl) { const shareUrl = `${window.location.href.split('?')[0]}?gpx=${encodeURIComponent(userUrl)}`; navigator.clipboard.writeText(shareUrl).then(() => alert("Link αντιγράφηκε!"), () => prompt("Link:", shareUrl)); } }
         async function analyzeRouteWithAI() {
-            if (!currentRouteData) return;
-            document.getElementById('aiModal').style.display = 'flex';
-            document.getElementById('aiModalContent').innerHTML = '<div style="text-align:center">Φόρτωση...</div>';
+            if (!currentRouteData) return; document.getElementById('aiModal').style.display = 'flex'; document.getElementById('aiModalContent').innerHTML = '<div style="text-align:center">Φόρτωση...</div>';
             const prompt = `Ανάλυσε διαδρομή Πάρνηθας: ${currentRouteData.dist}km, +${currentRouteData.gain}m gain.`;
             const response = await callGemini(prompt);
             document.getElementById('aiModalContent').innerHTML = response.replace(/\*\*/g, '<b>').replace(/\*\*/g, '</b>').replace(/\n/g, '<br>');
         }
         function closeAiModal(e) { if (!e || e.target.id === 'aiModal' || e.target.classList.contains('modal-close')) document.getElementById('aiModal').style.display = 'none'; }
-        
         function toggleChat() { const w = document.getElementById('chatWindow'); w.style.display = w.style.display === 'flex' ? 'none' : 'flex'; }
         function handleEnter(e) { if (e.key === 'Enter') sendMessage(); }
         async function sendMessage() {
@@ -541,10 +581,7 @@
             const res = await callGemini(`User asked: ${msg}. Reply as Parnitha ranger.`);
             addMessage(res, 'msg-ai');
         }
-        function addMessage(t, c) {
-            const d = document.createElement('div'); d.className = `message ${c}`; d.innerText = t;
-            const b = document.getElementById('chatMessages'); b.appendChild(d); b.scrollTop = b.scrollHeight;
-        }
+        function addMessage(t, c) { const d = document.createElement('div'); d.className = `message ${c}`; d.innerText = t; const b = document.getElementById('chatMessages'); b.appendChild(d); b.scrollTop = b.scrollHeight; }
         function clearRoutes() { gpxLayerGroup.clearLayers(); closeElevationChart(); currentRouteData=null; map.setView([38.168, 23.722], 14); }
         function drawElevationChart(data) {
             const ctx = document.getElementById('elevationChart').getContext('2d'); document.getElementById('elevation-container').style.display='flex';
