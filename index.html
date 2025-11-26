@@ -29,7 +29,8 @@
 
         /* Κουτί τίτλου */
         .info-box {
-            position: absolute; top: 20px; left: 50px; z-index: 1000;
+            position: absolute; top: 20px; left: 60px; /* Λίγο πιο δεξιά για να μην πέφτει πάνω στα zoom controls */
+            z-index: 1000;
             background: white; padding: 15px; border-radius: 8px;
             box-shadow: 0 0 15px rgba(0,0,0,0.2); max-width: 250px;
         }
@@ -42,6 +43,7 @@
             display: flex; gap: 10px;
             flex-wrap: wrap; 
             justify-content: flex-end;
+            max-width: 60%; /* Για να μην πέφτει πάνω στο info box */
         }
         
         .control-btn {
@@ -52,6 +54,7 @@
             font-weight: bold;
             display: flex; align-items: center; gap: 5px;
             position: relative;
+            white-space: nowrap; /* Να μην σπάει το κείμενο */
         }
 
         /* --- TOOLTIP STYLES --- */
@@ -66,6 +69,16 @@
             pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.25);
             z-index: 1001; border: 1px solid #f0f0f0; font-weight: normal;
         }
+        /* Κρύβουμε τα tooltips στα κινητά για να μην ενοχλούν στο touch */
+        @media (hover: none) {
+            .control-btn[data-tooltip]:hover::after,
+            .control-btn[data-tooltip]:hover::before,
+            .ai-analyze-btn[data-tooltip]:hover::after,
+            .ai-analyze-btn[data-tooltip]:hover::before {
+                display: none;
+            }
+        }
+
         .control-btn[data-tooltip]:hover::before,
         .ai-analyze-btn[data-tooltip]:hover::before {
             content: ''; position: absolute; top: 105%; left: 50%;
@@ -89,6 +102,7 @@
             position: absolute; bottom: 30px; left: 20px; z-index: 9999;
             width: 150px; height: auto; pointer-events: none;
             filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8));
+            transition: width 0.3s; /* Smooth animation */
         }
 
         /* Στυλ για το παράθυρο Υψομετρικής */
@@ -121,11 +135,13 @@
             color: white; font-size: 24px; transition: transform 0.3s;
         }
         .chat-fab:hover { transform: scale(1.1); background: #1b5e20; }
+        
         .chat-window {
             position: absolute; bottom: 100px; right: 20px; width: 300px; height: 400px;
             background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
             z-index: 3000; display: none; flex-direction: column; overflow: hidden; border: 1px solid #ddd;
         }
+        
         .chat-header { background: #2e7d32; color: white; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .chat-messages { flex: 1; padding: 10px; overflow-y: auto; background: #f9f9f9; font-size: 13px; }
         .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; max-width: 80%; word-wrap: break-word; }
@@ -175,6 +191,54 @@
         .settings-help { font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 15px; }
         .settings-help a { color: #3388ff; }
 
+        /* --- MEDIA QUERIES ΓΙΑ MOBILE --- */
+        @media (max-width: 768px) {
+            /* Info Box: Πιο συμπαγές και μετακίνηση για να μη κρύβει το χάρτη */
+            .info-box {
+                top: 10px;
+                left: 50px; /* Δίπλα από τα controls */
+                padding: 10px;
+                max-width: 180px;
+            }
+            .info-box h2 { font-size: 14px; }
+            .info-box p { display: none; } /* Κρύβουμε την περιγραφή στα πολύ μικρά κινητά */
+
+            /* Controls: Πιο μικρά κουμπιά, στοίχιση κάτω από το info box ή δίπλα */
+            .controls-box {
+                top: 70px; /* Κάτω από το info box αν χρειαστεί ή αριστερά */
+                left: 10px;
+                right: auto;
+                justify-content: flex-start;
+                max-width: 90%;
+                gap: 5px;
+            }
+            .control-btn {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+
+            /* Chat Window: Πλήρες πλάτος σχεδόν */
+            .chat-window {
+                width: 90%;
+                right: 5%;
+                bottom: 90px;
+                height: 50vh;
+            }
+
+            /* Logo: Μικραίνει */
+            .logo-box {
+                width: 100px;
+                bottom: 25px;
+                left: 10px;
+            }
+
+            /* Elevation Chart: Πιο φαρδύ */
+            #elevation-container {
+                width: 95%;
+                height: 200px;
+                bottom: 10px;
+            }
+        }
     </style>
 </head>
 <body>
