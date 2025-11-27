@@ -14,129 +14,148 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
-        #map { width: 100%; height: 100vh; z-index: 1; }
+        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background-color: #f0f2f5; }
+        #map { width: 100%; height: 100vh; z-index: 1; cursor: grab; }
+        #map.adding-point { cursor: crosshair; }
+
+        /* --- 3D BUTTON STYLES --- */
+        .control-btn, .ai-analyze-btn, .dropdown-item, .settings-save-btn, .delete-marker-btn {
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            position: relative;
+            transition: all 0.1s ease;
+            outline: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 14px;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2); /* Η 3D σκιά */
+            transform: translateY(0);
+        }
+
+        .control-btn:active, .ai-analyze-btn:active, .dropdown-item:active, .settings-save-btn:active, .delete-marker-btn:active {
+            transform: translateY(4px); /* Κίνηση προς τα κάτω */
+            box-shadow: 0 0 0 rgba(0,0,0,0.2); /* Εξαφάνιση σκιάς */
+        }
+
+        /* Χρώματα Κουμπιών 3D */
+        .control-btn { background: #ffffff; color: #333; border: 1px solid #e0e0e0; border-bottom-color: #bdc3c7; }
+        
+        .btn-gps { background: #3498db; color: white; border-color: #2980b9; border-bottom-color: #1f6391; box-shadow: 0 4px 0 #1f6391; }
+        .btn-gps.active { background: #2ecc71; border-color: #27ae60; border-bottom-color: #1e8449; box-shadow: 0 4px 0 #1e8449; }
+        
+        .btn-add-point { background: #e67e22; color: white; border-color: #d35400; border-bottom-color: #a04000; box-shadow: 0 4px 0 #a04000; }
+        .btn-add-point.active { background: #c0392b; border-color: #922b21; box-shadow: 0 4px 0 #641e16; }
+
+        .btn-save-html { background: #16a085; color: white; border-color: #1abc9c; border-bottom-color: #0e6655; box-shadow: 0 4px 0 #0e6655; }
+        
+        .btn-upload { color: #3388ff; border-bottom-color: #aacbff; }
+        .btn-library { color: #27ae60; border-bottom-color: #a9dfbf; }
+        .btn-email { color: #8e44ad; border-bottom-color: #d2b4de; }
+        .btn-clear { color: #e74c3c; border-bottom-color: #f5b7b1; }
+        .btn-settings { color: #7f8c8d; border-bottom-color: #d7dbdd; }
+        
+        /* Dropdown Share Button 3D */
+        .btn-share-main { background: #9b59b6; color: white; border-color: #8e44ad; border-bottom-color: #6c3483; box-shadow: 0 4px 0 #6c3483; }
+        
+        .ai-analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; 
+            box-shadow: 0 4px 0 #4a3b75;
+        }
+
+        /* --- DROPDOWN MENU --- */
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 120%; /* Εμφάνιση κάτω από το κουμπί */
+            right: 0;
+            background-color: white;
+            min-width: 180px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            z-index: 2000;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            padding: 5px;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .dropdown-menu.show { display: flex; animation: fadeIn 0.2s; }
+        .dropdown-item {
+            width: 100%;
+            text-align: left;
+            justify-content: flex-start;
+            background: white;
+            color: #333;
+            border: 1px solid #eee;
+            border-bottom: 2px solid #ddd;
+            box-shadow: none; /* Λιγότερο έντονο 3D μέσα στο μενού */
+            padding: 8px;
+            margin-bottom: 2px;
+        }
+        .dropdown-item:hover { background-color: #f8f9fa; }
+        .dropdown-item:active { transform: translateY(2px); border-bottom-width: 0; margin-bottom: 4px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
 
         /* Στυλ για το Popup */
         .custom-popup .leaflet-popup-content-wrapper {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
-            box-shadow: 0 3px 14px rgba(0,0,0,0.4);
-            text-align: center;
+            background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 3px 14px rgba(0,0,0,0.4); text-align: center;
         }
         .popup-title { font-size: 18px; font-weight: bold; color: #2c3e50; display: block; }
         .popup-desc { font-size: 14px; color: #555; }
+        .delete-marker-btn { background: #e74c3c; color: white; box-shadow: 0 3px 0 #c0392b; font-size: 11px; padding: 4px 8px; margin-top: 5px;}
 
         /* Κουτί τίτλου */
         .info-box {
-            position: absolute; top: 20px; left: 60px;
-            z-index: 1000;
-            background: white; padding: 12px; border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2); max-width: 250px;
+            position: absolute; top: 20px; left: 60px; z-index: 1000;
+            background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); max-width: 250px;
+            border-bottom: 4px solid #ddd; /* 3D effect στο box */
         }
-        .info-box h2 { margin: 0 0 5px 0; font-size: 16px; color: #2e7d32; }
+        .info-box h2 { margin: 0 0 5px 0; font-size: 16px; color: #2e7d32; text-transform: uppercase; }
         .info-box p { margin: 0; font-size: 11px; color: #666; }
 
         /* Κουτιά Ελέγχου */
-        .controls-box {
-            position: absolute; top: 20px; right: 20px; z-index: 1000;
-            display: flex; gap: 8px;
-            flex-wrap: wrap; 
-            justify-content: flex-end;
-            max-width: 60%;
-        }
-        
-        /* Μικρότερα Κουμπιά */
-        .control-btn {
-            background: white; border: none; padding: 6px 12px; /* Μειωμένο padding */
-            border-radius: 6px; cursor: pointer; font-size: 12px; /* Μικρότερη γραμματοσειρά */
-            box-shadow: 0 0 10px rgba(0,0,0,0.15);
-            transition: background 0.2s;
-            font-weight: bold;
-            display: flex; align-items: center; gap: 5px;
-            position: relative;
-            white-space: nowrap;
-        }
+        .controls-box { position: absolute; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; max-width: 65%; pointer-events: none; }
+        .controls-box > * { pointer-events: auto; } /* Επαναφορά κλικ στα παιδιά */
 
-        /* --- TOOLTIP STYLES --- */
-        .control-btn[data-tooltip]:hover::after,
-        .ai-analyze-btn[data-tooltip]:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            top: 115%; left: 50%; transform: translateX(-50%);
-            background-color: white; color: #333;
-            padding: 6px 10px; border-radius: 6px; font-size: 11px;
-            white-space: nowrap; opacity: 0; animation: fadeInTooltip 0.3s forwards;
-            pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-            z-index: 1001; border: 1px solid #f0f0f0; font-weight: normal;
+        /* Tooltips */
+        .control-btn[data-tooltip]:hover::after, .ai-analyze-btn[data-tooltip]:hover::after, .btn-share-main[data-tooltip]:hover::after {
+            content: attr(data-tooltip); position: absolute; top: 125%; left: 50%; transform: translateX(-50%);
+            background-color: #333; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap;
+            pointer-events: none; z-index: 3000;
         }
-        @media (hover: none) {
-            .control-btn[data-tooltip]:hover::after, .control-btn[data-tooltip]:hover::before,
-            .ai-analyze-btn[data-tooltip]:hover::after, .ai-analyze-btn[data-tooltip]:hover::before { display: none; }
-        }
-        .control-btn[data-tooltip]:hover::before,
-        .ai-analyze-btn[data-tooltip]:hover::before {
-            content: ''; position: absolute; top: 105%; left: 50%;
-            transform: translateX(-50%); border-width: 6px; border-style: solid;
-            border-color: transparent transparent white transparent;
-            opacity: 0; animation: fadeInTooltip 0.3s forwards;
-            filter: drop-shadow(0 -2px 1px rgba(0,0,0,0.05));
-        }
-        @keyframes fadeInTooltip { to { opacity: 1; } }
-
-        /* Χρώματα Κουμπιών */
-        .btn-upload { color: #3388ff; } .btn-upload:hover { background: #f0f7ff; }
-        .btn-clear { color: #e74c3c; } .btn-clear:hover { background: #fff0f0; }
-        .btn-share { color: #8e44ad; } .btn-share:hover { background: #f5eef8; }
-        .btn-email { color: #e67e22; } .btn-email:hover { background: #fff8e1; }
-        .btn-library { color: #27ae60; } .btn-library:hover { background: #e8f8f5; }
-        .btn-print { color: #34495e; } .btn-print:hover { background: #ebedef; }
-        .btn-settings { color: #7f8c8d; } .btn-settings:hover { background: #f2f4f4; }
+        @media (hover: none) { [data-tooltip]:hover::after { display: none; } }
 
         #file-input { display: none; }
-
-        .logo-box {
-            position: absolute; bottom: 30px; left: 20px; z-index: 9999;
-            width: 150px; height: auto; pointer-events: none;
-            filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8));
-            transition: width 0.3s;
-        }
+        .logo-box { position: absolute; bottom: 30px; left: 20px; z-index: 9999; width: 150px; height: auto; pointer-events: none; filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); transition: width 0.3s; }
 
         /* Elevation Chart */
         #elevation-container {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 80%; max-width: 800px; height: 200px; /* Λίγο πιο χαμηλό */
-            background: rgba(255, 255, 255, 0.95); border-radius: 12px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 2000;
-            padding: 10px 20px 10px 10px; display: none; flex-direction: column;
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80%; max-width: 800px; height: 220px;
+            background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 2000;
+            padding: 10px 20px 10px 10px; display: none; flex-direction: column; border-bottom: 4px solid #ddd;
         }
         .elevation-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #333; }
         .elevation-actions { display: flex; gap: 10px; }
-        .ai-analyze-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; border: none; padding: 4px 10px;
-            border-radius: 20px; cursor: pointer; font-size: 11px; font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: transform 0.2s; position: relative;
-        }
-        .ai-analyze-btn:hover { transform: scale(1.05); }
         .close-chart-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: #888; }
-        .close-chart-btn:hover { color: #000; }
-        #elevationChart { width: 100% !important; height: 150px !important; }
+        #elevationChart { width: 100% !important; height: 160px !important; }
 
         /* Chat Styles */
-        .chat-fab {
-            position: absolute; bottom: 30px; right: 20px; z-index: 3000;
-            width: 50px; height: 50px; background: #2e7d32; border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex;
-            justify-content: center; align-items: center; cursor: pointer;
-            color: white; font-size: 22px; transition: transform 0.3s;
-        }
-        .chat-fab:hover { transform: scale(1.1); background: #1b5e20; }
-        .chat-window {
-            position: absolute; bottom: 90px; right: 20px; width: 300px; height: 400px;
-            background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            z-index: 3000; display: none; flex-direction: column; overflow: hidden; border: 1px solid #ddd;
-        }
+        .chat-fab { position: absolute; bottom: 30px; right: 20px; z-index: 3000; width: 60px; height: 60px; background: #2e7d32; border-radius: 50%; box-shadow: 0 6px 0 #1e6f2e, 0 10px 10px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; font-size: 26px; transition: transform 0.1s; border: 2px solid #fff; }
+        .chat-fab:active { transform: translateY(6px); box-shadow: 0 0 0 #1e6f2e; }
+        .chat-window { position: absolute; bottom: 100px; right: 20px; width: 300px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 3000; display: none; flex-direction: column; overflow: hidden; border: 1px solid #ddd; }
         .chat-header { background: #2e7d32; color: white; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .chat-messages { flex: 1; padding: 10px; overflow-y: auto; background: #f9f9f9; font-size: 13px; }
         .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; max-width: 80%; word-wrap: break-word; }
@@ -148,68 +167,23 @@
         .typing-indicator { font-style: italic; color: #888; font-size: 12px; display: none; margin: 5px; }
 
         /* Modals */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 5000; display: none;
-            justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background: white; padding: 25px; border-radius: 12px;
-            max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;
-            position: relative;
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 5000; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; border-bottom: 5px solid #ddd; }
         .modal-close { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #888; }
         .ai-result-title { font-size: 18px; font-weight: bold; color: #667eea; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;}
         
-        /* Library Styles */
-        .library-section-title { font-size: 14px; color: #666; font-weight: bold; margin: 15px 0 5px 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        /* Settings & Library Styles */
+        .settings-group { margin-bottom: 15px; }
+        .settings-label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 13px; color: #555; }
         .library-list { list-style: none; padding: 0; margin: 0; }
-        .library-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px; border-bottom: 1px solid #eee; transition: background 0.1s;
-        }
-        .library-item:hover { background: #f9f9f9; }
-        .library-item:last-child { border-bottom: none; }
-        .library-name { cursor: pointer; color: #333; font-weight: 500; flex: 1; display: flex; align-items: center; gap: 8px;}
-        .library-name:hover { color: #3388ff; }
-        .library-delete { color: #e74c3c; cursor: pointer; padding: 5px; margin-left: 10px; }
-        .library-delete:hover { background: #fff0f0; border-radius: 4px; }
-        .empty-library { text-align: center; color: #888; padding: 10px; font-size: 13px; font-style: italic; }
+        .library-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .settings-input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; box-sizing: border-box; }
+        .radio-group { display: flex; gap: 15px; flex-wrap: wrap; }
+        .color-preview { width: 16px; height: 16px; border-radius: 50%; display: inline-block; border: 1px solid #ddd; vertical-align: middle;}
 
-        /* Settings Modal Styles */
-        .settings-group { margin-bottom: 20px; }
-        .settings-label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 14px; color: #333; }
-        .settings-input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; }
-        .settings-save-btn { background: #2e7d32; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px;}
-        .settings-help { font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 15px; }
-        .settings-help a { color: #3388ff; }
-        
-        /* Color/Width Pickers */
-        .radio-group { display: flex; gap: 15px; }
-        .radio-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 13px; }
-        .color-preview { width: 16px; height: 16px; border-radius: 50%; display: inline-block; border: 1px solid #ddd; }
-
-        /* PRINT STYLES - Κρύβουμε τα πάντα εκτός από χάρτη και logo */
-        @media print {
-            .controls-box, .chat-fab, .chat-window, .info-box, .leaflet-control-zoom, #elevation-container {
-                display: none !important;
-            }
-            #map { height: 100vh; width: 100%; }
-            .logo-box { bottom: 10px; left: 10px; width: 100px; }
-            body { margin: 0; padding: 0; overflow: hidden; }
-        }
-
-        /* Mobile Styles */
-        @media (max-width: 768px) {
-            .info-box { top: 10px; left: 50px; padding: 8px; max-width: 150px; }
-            .info-box h2 { font-size: 12px; }
-            .info-box p { display: none; }
-            .controls-box { top: 60px; left: 10px; right: auto; justify-content: flex-start; max-width: 95%; gap: 5px; }
-            .control-btn { padding: 6px 8px; font-size: 11px; }
-            .chat-window { width: 90%; right: 5%; bottom: 80px; height: 50vh; }
-            .logo-box { width: 80px; bottom: 20px; left: 10px; }
-            #elevation-container { width: 95%; height: 180px; bottom: 10px; }
-        }
+        /* Print & Mobile */
+        @media print { .controls-box, .chat-fab, .chat-window, .info-box, .leaflet-control-zoom, #elevation-container, .delete-marker-btn { display: none !important; } #map { height: 100vh; width: 100%; } }
+        @media (max-width: 768px) { .info-box { top: 10px; left: 50px; padding: 8px; max-width: 150px; } .info-box p { display: none; } .controls-box { top: 60px; left: 10px; justify-content: flex-start; max-width: 95%; } .chat-window { width: 90%; right: 5%; bottom: 80px; height: 50vh; } }
     </style>
 </head>
 <body>
@@ -219,38 +193,55 @@
         <p>Χάρτης δράσης ή Πεζοπορικής Διαδρομής</p>
     </div>
 
-    <!-- Κουμπιά ελέγχου -->
     <div class="controls-box">
-        <button class="control-btn btn-upload" data-tooltip="Φορτώστε αρχείο GPX" onclick="document.getElementById('file-input').click()">
-            <i class="fas fa-folder-open"></i> Φόρτωση
+        <!-- GPS Tracking -->
+        <button id="gpsBtn" class="control-btn btn-gps" data-tooltip="Τοποθεσία" onclick="toggleGPS()">
+            <i class="fas fa-crosshairs"></i>
+        </button>
+
+        <!-- Προσθήκη Σημείου -->
+        <button id="addPointBtn" class="control-btn btn-add-point" data-tooltip="Προσθήκη Σημείου" onclick="toggleAddPointMode()">
+            <i class="fas fa-map-marker-alt"></i>
+        </button>
+
+        <!-- Αποθήκευση HTML -->
+        <button class="control-btn btn-save-html" data-tooltip="Αποθήκευση Αλλαγών" onclick="downloadUpdatedHtml()">
+            <i class="fas fa-save"></i>
+        </button>
+
+        <!-- Φόρτωση GPX -->
+        <button class="control-btn btn-upload" data-tooltip="Φόρτωση GPX" onclick="document.getElementById('file-input').click()">
+            <i class="fas fa-folder-open"></i>
         </button>
         
-        <button class="control-btn btn-library" data-tooltip="Βιβλιοθήκη Διαδρομών" onclick="openLibrary()">
+        <!-- Βιβλιοθήκη -->
+        <button class="control-btn btn-library" data-tooltip="Βιβλιοθήκη" onclick="openLibrary()">
             <i class="fas fa-book"></i>
         </button>
 
-        <button class="control-btn btn-share" data-tooltip="Μοιράσου το" onclick="createShareLink()">
-            <i class="fas fa-link"></i>
-        </button>
+        <!-- NEO: Dropdown SHARE (Share, Print, Save JPG) -->
+        <div class="dropdown-container">
+            <button class="control-btn btn-share-main" data-tooltip="Share" onclick="toggleShareMenu()">
+                <i class="fas fa-share-alt"></i> Share
+            </button>
+            <div id="shareDropdown" class="dropdown-menu">
+                <button class="dropdown-item" onclick="createShareLink()"><i class="fas fa-link"></i> Αντιγραφή Link</button>
+                <button class="dropdown-item" onclick="window.print()"><i class="fas fa-print"></i> Εκτύπωση / PDF</button>
+                <button class="dropdown-item" onclick="saveMapAsImage()"><i class="fas fa-camera"></i> Αποθήκευση JPG</button>
+            </div>
+        </div>
 
-        <!-- Κουμπί Screenshot/PDF (Print) -->
-        <button class="control-btn btn-print" data-tooltip="Εκτύπωση / Αποθήκευση ως PDF" onclick="window.print()">
-            <i class="fas fa-print"></i> Εκτύπωση
-        </button>
-        
-        <!-- Κουμπί JPG Save -->
-        <button class="control-btn btn-print" data-tooltip="Αποθήκευση ως εικόνα (JPG)" onclick="saveMapAsImage()">
-            <i class="fas fa-camera"></i> JPG
-        </button>
-
-        <button class="control-btn btn-clear" data-tooltip="Διαγραφή" onclick="clearRoutes()">
+        <!-- Διαγραφή -->
+        <button class="control-btn btn-clear" data-tooltip="Διαγραφή GPX" onclick="clearRoutes()">
             <i class="fas fa-trash"></i>
         </button>
         
+        <!-- Email -->
         <button class="control-btn btn-email" data-tooltip="Επικοινωνία" onclick="window.location.href='mailto:info@drasiparnithas.gr?subject=Επικοινωνία από τον Ψηφιακό Χάρτη'">
             <i class="fas fa-envelope"></i>
         </button>
 
+        <!-- Ρυθμίσεις -->
         <button class="control-btn btn-settings" data-tooltip="Ρυθμίσεις" onclick="openSettings()">
             <i class="fas fa-cog"></i>
         </button>
@@ -259,25 +250,19 @@
     </div>
 
     <img src="https://lh3.googleusercontent.com/a-/ALV-UjUCO8MgQJshwSQ6QbDEBjR4OLVCwN3-3eB3-9L4XwPCvNf2YM4=s265-w265-h265" 
-         alt="Λογότυπο Ε.Δ.ΠΑ" 
-         class="logo-box"
-         onerror="this.style.display='none';">
+         alt="Λογότυπο Ε.Δ.ΠΑ" class="logo-box" onerror="this.style.display='none';">
 
-    <!-- Παράθυρο Υψομετρικής -->
     <div id="elevation-container">
         <div class="elevation-header">
             <div class="elevation-actions">
                 <span>Υψομετρική Καμπύλη</span>
-                <button id="ai-btn" class="ai-analyze-btn" data-tooltip="Ζητήστε ανάλυση της διαδρομής από το Gemini AI" onclick="analyzeRouteWithAI()">
-                    ✨ AI Οδηγός
-                </button>
+                <button id="ai-btn" class="ai-analyze-btn" onclick="analyzeRouteWithAI()">✨ AI Οδηγός</button>
             </div>
             <button class="close-chart-btn" onclick="closeElevationChart()">×</button>
         </div>
         <canvas id="elevationChart"></canvas>
     </div>
 
-    <!-- Chat -->
     <div class="chat-fab" onclick="toggleChat()"><i class="fas fa-tree"></i></div>
     <div class="chat-window" id="chatWindow">
         <div class="chat-header"><span>🌲 Οδηγός Πάρνηθας</span><span style="cursor:pointer" onclick="toggleChat()">_</span></div>
@@ -294,7 +279,7 @@
         <div class="modal-content">
             <span class="modal-close" onclick="closeAiModal(null)">&times;</span>
             <div class="ai-result-title"><i class="fas fa-robot"></i> Ανάλυση Gemini</div>
-            <div id="aiModalContent">Φόρτωση ανάλυσης...</div>
+            <div id="aiModalContent">Φόρτωση...</div>
         </div>
     </div>
 
@@ -303,294 +288,309 @@
             <span class="modal-close" onclick="closeLibraryModal(null)">&times;</span>
             <div class="ai-result-title"><i class="fas fa-book"></i> Βιβλιοθήκη</div>
             <div id="libraryContent">
-                <div class="library-section-title">☁️ Cloud (GitHub)</div>
-                <div id="githubLoading" style="text-align:center; padding:10px; font-size:12px; color:#666;">Φόρτωση...</div>
+                <div style="margin-bottom:15px; font-size:12px; color:#666;">Cloud: GitHub | Local: Τοπικά</div>
                 <ul class="library-list" id="githubList"></ul>
-                <div class="library-section-title" style="margin-top:20px;">💾 Τοπικά</div>
-                <ul class="library-list" id="localList"></ul>
+                <ul class="library-list" id="localList" style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;"></ul>
             </div>
         </div>
     </div>
 
-    <!-- Modal Ρυθμίσεων -->
     <div class="modal-overlay" id="settingsModal" onclick="closeSettingsModal(event)">
         <div class="modal-content">
             <span class="modal-close" onclick="closeSettingsModal(null)">&times;</span>
             <div class="ai-result-title"><i class="fas fa-cog"></i> Ρυθμίσεις</div>
             
-            <!-- Επιλογές Γραμμής -->
+            <div class="settings-group">
+                <label class="settings-label">Τύπος Χάρτη:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="mapType" value="osm" checked> Κλασικός</label>
+                    <label><input type="radio" name="mapType" value="satellite"> Δορυφορικός</label>
+                    <label><input type="radio" name="mapType" value="topo"> Τοπογραφικός</label>
+                </div>
+            </div>
+
             <div class="settings-group">
                 <label class="settings-label">Χρώμα Γραμμής:</label>
                 <div class="radio-group">
-                    <label class="radio-label"><input type="radio" name="lineColor" value="blue" checked> <span class="color-preview" style="background:#3388ff;"></span> Μπλε</label>
-                    <label class="radio-label"><input type="radio" name="lineColor" value="red"> <span class="color-preview" style="background:#e74c3c;"></span> Κόκκινο</label>
-                    <label class="radio-label"><input type="radio" name="lineColor" value="#f1c40f"> <span class="color-preview" style="background:#f1c40f;"></span> Κίτρινο</label>
+                    <label><input type="radio" name="lineColor" value="blue" checked> <span class="color-preview" style="background:#3388ff;"></span></label>
+                    <label><input type="radio" name="lineColor" value="red"> <span class="color-preview" style="background:#e74c3c;"></span></label>
+                    <label><input type="radio" name="lineColor" value="#f1c40f"> <span class="color-preview" style="background:#f1c40f;"></span></label>
                 </div>
             </div>
-
             <div class="settings-group">
                 <label class="settings-label">Πάχος Γραμμής:</label>
                 <div class="radio-group">
-                    <label class="radio-label"><input type="radio" name="lineWeight" value="6" checked> Μεγάλο (Τρέχον)</label>
-                    <label class="radio-label"><input type="radio" name="lineWeight" value="3"> Λεπτό</label>
+                    <label><input type="radio" name="lineWeight" value="6" checked> Μεγάλο</label>
+                    <label><input type="radio" name="lineWeight" value="3"> Λεπτό</label>
                 </div>
             </div>
-
-            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-
+            <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
             <div class="settings-group">
-                <label class="settings-label">Google API Key (Προαιρετικό):</label>
-                <div class="settings-help">Το σύστημα έχει κεντρικό κλειδί. Αν θέλετε να χρησιμοποιήσετε δικό σας, βάλτε το εδώ.</div>
-                <input type="password" id="apiKeyInput" class="settings-input" placeholder="Επικολλήστε το API Key...">
+                <label class="settings-label">Google API Key:</label>
+                <input type="password" id="apiKeyInput" class="settings-input" placeholder="Κλειδί (προαιρετικό)...">
             </div>
+            <button class="settings-save-btn" onclick="saveSettings()">Αποθήκευση</button>
+        </div>
+    </div>
 
-            <button class="settings-save-btn" onclick="saveSettings()">Αποθήκευση Ρυθμίσεων</button>
+    <div class="modal-overlay" id="addPointModal" onclick="closeAddPointModal(event)">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeAddPointModal(null)">&times;</span>
+            <div class="ai-result-title"><i class="fas fa-map-marker-alt"></i> Προσθήκη Σημείου</div>
+            <div class="settings-group">
+                <label class="settings-label">Τίτλος:</label>
+                <input type="text" id="pointTitle" class="settings-input" placeholder="Π.χ. Πηγή Κεραμίδι">
+            </div>
+            <div class="settings-group">
+                <label class="settings-label">Περιγραφή:</label>
+                <textarea id="pointDesc" class="settings-input" rows="3" placeholder="Π.χ. Πόσιμο νερό, στάση..."></textarea>
+            </div>
+            <div class="settings-group">
+                <label class="settings-label">Τύπος:</label>
+                <select id="pointType" class="settings-input">
+                    <option value="general">Γενικό</option>
+                    <option value="refuge">Καταφύγιο</option>
+                    <option value="sight">Αξιοθέατο</option>
+                    <option value="water">Νερό/Πηγή</option>
+                    <option value="danger">Κίνδυνος</option>
+                </select>
+            </div>
+            <button class="settings-save-btn" onclick="confirmAddPoint()">Προσθήκη στο Χάρτη</button>
         </div>
     </div>
 
     <div id="map"></div>
 
-    <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Script για Screenshot (html2canvas) -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <script>
         const GLOBAL_API_KEY = "AIzaSyASDnF3E2gmAvv8WY96wg3m3ZkpAntDUU4"; 
         const STORAGE_KEY = 'parnitha_saved_routes';
         const SETTINGS_KEY = 'parnitha_settings';
-
-        // --- Settings Management ---
-        function getSettings() {
-            const defaultSettings = { color: '#3388ff', weight: 6 };
-            try {
-                const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
-                return { ...defaultSettings, ...saved };
-            } catch(e) { return defaultSettings; }
-        }
-
-        function saveSettings() {
-            // API Key
-            const apiKeyInput = document.getElementById('apiKeyInput').value.trim();
-            if (apiKeyInput) localStorage.setItem('gemini_api_key', apiKeyInput);
-            
-            // Visual Settings
-            const color = document.querySelector('input[name="lineColor"]:checked').value;
-            const weight = parseInt(document.querySelector('input[name="lineWeight"]:checked').value);
-            
-            const settings = { 
-                color: color === 'blue' ? '#3388ff' : (color === 'red' ? '#e74c3c' : color), 
-                weight: weight 
-            };
-            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-            
-            alert("Οι ρυθμίσεις αποθηκεύτηκαν!");
-            closeSettingsModal(null);
-            
-            // Αν υπάρχει ήδη φορτωμένη διαδρομή, θα μπορούσαμε να την ξαναφορτώσουμε, 
-            // αλλά για απλότητα εφαρμόζονται στην επόμενη φόρτωση.
-            // Αν θέλετε άμεση εφαρμογή, κάντε reload τη σελίδα:
-            // location.reload(); 
-        }
-
-        function openSettings() {
-            const settings = getSettings();
-            
-            // Set Color Radio
-            let colorVal = 'blue';
-            if (settings.color === '#e74c3c') colorVal = 'red';
-            else if (settings.color === '#f1c40f') colorVal = '#f1c40f';
-            
-            const colorRadio = document.querySelector(`input[name="lineColor"][value="${colorVal}"]`);
-            if (colorRadio) colorRadio.checked = true;
-
-            // Set Weight Radio
-            const weightRadio = document.querySelector(`input[name="lineWeight"][value="${settings.weight}"]`);
-            if (weightRadio) weightRadio.checked = true;
-
-            document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || "";
-            document.getElementById('settingsModal').style.display = 'flex';
-        }
-
-        function closeSettingsModal(e) {
-            if (!e || e.target.id === 'settingsModal' || e.target.classList.contains('modal-close')) {
-                document.getElementById('settingsModal').style.display = 'none';
-            }
-        }
-
-        // --- Map & GPX ---
-        const map = L.map('map').setView([38.168, 23.722], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
-        const gpxLayerGroup = L.layerGroup().addTo(map);
-        let elevationChart = null;
-        let currentRouteData = null;
         const GITHUB_USER = 'EDPAdraseis';
         const GITHUB_REPO = 'map';
+
+        // --- PERMANENT MARKERS ---
+        var permanentMarkers = [];
+        // -------------------------
+
+        // --- MAP LAYERS ---
+        const layers = {
+            osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }),
+            satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri' }),
+            topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'Map data: © OpenStreetMap, SRTM | Map style: © OpenTopoMap (CC-BY-SA)' })
+        };
+
+        const map = L.map('map', { zoomControl: false }).setView([38.168, 23.722], 14);
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+        layers.osm.addTo(map);
+        let currentLayer = layers.osm;
+
+        const gpxLayerGroup = L.layerGroup().addTo(map);
+        const markersLayerGroup = L.layerGroup().addTo(map);
+        const gpsLayerGroup = L.layerGroup().addTo(map);
+
+        let elevationChart = null;
+        let currentRouteData = null;
+        let isAddingPoint = false;
+        let tempLatLng = null;
+        let isGpsActive = false;
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const gpxUrl = urlParams.get('gpx');
             if (gpxUrl) loadGpxFromUrl(gpxUrl);
+            loadPermanentMarkers();
+            const settings = getSettings();
+            updateMapLayer(settings.mapType);
         };
 
+        // --- DROPDOWN LOGIC (SHARE) ---
+        function toggleShareMenu() {
+            const menu = document.getElementById('shareDropdown');
+            if (menu.classList.contains('show')) {
+                menu.classList.remove('show');
+            } else {
+                menu.classList.add('show');
+            }
+        }
+        
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.btn-share-main') && !event.target.parentElement.matches('.btn-share-main')) {
+                const dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    const openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+
+        // --- GPS TRACKING ---
+        function toggleGPS() {
+            const btn = document.getElementById('gpsBtn');
+            if (isGpsActive) {
+                map.stopLocate(); gpsLayerGroup.clearLayers(); isGpsActive = false;
+                btn.classList.remove('active');
+            } else {
+                map.locate({setView: true, watch: true, maxZoom: 16, enableHighAccuracy: true});
+                isGpsActive = true;
+                btn.classList.add('active');
+            }
+        }
+        map.on('locationfound', function(e) {
+            gpsLayerGroup.clearLayers();
+            const radius = e.accuracy / 2;
+            L.circle(e.latlng, { radius: radius, color: '#2980b9', weight: 1, fillOpacity: 0.1 }).addTo(gpsLayerGroup);
+            const gpsIcon = L.divIcon({ className: 'gps-icon', html: '<div style="width: 15px; height: 15px; background: #2980b9; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>', iconSize: [15, 15] });
+            L.marker(e.latlng, {icon: gpsIcon}).addTo(gpsLayerGroup).bindPopup("Βρίσκεστε εδώ!").openPopup();
+        });
+        map.on('locationerror', function(e) { alert("Δεν βρέθηκε τοποθεσία."); toggleGPS(); });
+
+        // --- MAP LAYER ---
+        function updateMapLayer(type) {
+            map.removeLayer(currentLayer);
+            if (type === 'satellite') currentLayer = layers.satellite;
+            else if (type === 'topo') currentLayer = layers.topo;
+            else currentLayer = layers.osm;
+            currentLayer.addTo(map);
+        }
+
+        // --- MARKERS ---
+        function loadPermanentMarkers() {
+            markersLayerGroup.clearLayers();
+            permanentMarkers.forEach((p, index) => { addMarkerToMap(p.lat, p.lng, p.title, p.desc, p.type, index); });
+        }
+        function addMarkerToMap(lat, lng, title, desc, type, index) {
+            let color='#3388ff', icon='fa-map-marker-alt';
+            if(type==='refuge'){color='#e74c3c';icon='fa-home';} else if(type==='sight'){color='#27ae60';icon='fa-camera';} else if(type==='water'){color='#3498db';icon='fa-tint';} else if(type==='danger'){color='#c0392b';icon='fa-exclamation-triangle';}
+            const customIcon = L.divIcon({ className:'custom-div-icon', html:`<div style="background-color:${color};width:30px;height:30px;border-radius:50%;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;"><i class="fas ${icon}"></i></div>`, iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-30] });
+            const marker = L.marker([lat, lng], {icon: customIcon}).addTo(markersLayerGroup);
+            marker.bindPopup(`<span class="popup-title">${title}</span><span class="popup-desc">${desc}</span><button class="delete-marker-btn" onclick="deletePermanentMarker(${index})">Διαγραφή</button>`, { className: 'custom-popup' });
+        }
+        function toggleAddPointMode() {
+            isAddingPoint = !isAddingPoint;
+            const btn = document.getElementById('addPointBtn');
+            const mapEl = document.getElementById('map');
+            if (isAddingPoint) { btn.classList.add('active'); mapEl.classList.add('adding-point'); alert("Κλικ στο χάρτη."); }
+            else { btn.classList.remove('active'); mapEl.classList.remove('adding-point'); }
+        }
+        map.on('click', function(e) {
+            if (isAddingPoint) {
+                tempLatLng = e.latlng;
+                document.getElementById('addPointModal').style.display = 'flex';
+                document.getElementById('pointTitle').value = ''; document.getElementById('pointDesc').value = '';
+                toggleAddPointMode();
+            }
+        });
+        function confirmAddPoint() {
+            const title = document.getElementById('pointTitle').value;
+            const desc = document.getElementById('pointDesc').value;
+            const type = document.getElementById('pointType').value;
+            if (title && tempLatLng) { permanentMarkers.push({ lat: tempLatLng.lat, lng: tempLatLng.lng, title: title, desc: desc, type: type }); loadPermanentMarkers(); closeAddPointModal(null); }
+        }
+        function closeAddPointModal(e) { if (!e || e.target.id === 'addPointModal' || e.target.classList.contains('modal-close')) document.getElementById('addPointModal').style.display = 'none'; }
+        window.deletePermanentMarker = function(index) { if (confirm("Διαγραφή;")) { permanentMarkers.splice(index, 1); loadPermanentMarkers(); } };
+        function downloadUpdatedHtml() {
+            let htmlContent = document.documentElement.outerHTML;
+            const markersJson = JSON.stringify(permanentMarkers, null, 4);
+            const regex = /var permanentMarkers = \[[\s\S]*?\];/;
+            const newContent = `var permanentMarkers = ${markersJson};`;
+            if (htmlContent.match(regex)) {
+                htmlContent = htmlContent.replace(regex, newContent);
+                const fullHtml = "<!DOCTYPE html>\n" + htmlContent;
+                const blob = new Blob([fullHtml], {type: 'text/html'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = 'index.html'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                alert("Ανεβάστε το index.html στο GitHub.");
+            }
+        }
+
+        // --- UTILS & AI ---
+        function getSettings() { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { color:'#3388ff', weight:6, mapType:'osm' }; } catch(e) { return { color:'#3388ff', weight:6, mapType:'osm' }; } }
+        function saveSettings() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (apiKey) localStorage.setItem('gemini_api_key', apiKey);
+            const color = document.querySelector('input[name="lineColor"]:checked').value;
+            const weight = document.querySelector('input[name="lineWeight"]:checked').value;
+            const mapType = document.querySelector('input[name="mapType"]:checked').value;
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify({ 
+                color: color === 'blue' ? '#3388ff' : (color === 'red' ? '#e74c3c' : '#f1c40f'), 
+                weight: parseInt(weight), mapType: mapType
+            }));
+            updateMapLayer(mapType); alert("OK!"); closeSettingsModal(null);
+        }
+        function openSettings() {
+            const s = getSettings();
+            const cMap = {'#e74c3c':'red', '#f1c40f':'#f1c40f', '#3388ff':'blue'};
+            const colVal = Object.keys(cMap).find(k => k === s.color) ? cMap[s.color] : 'blue';
+            const cRad = document.querySelector(`input[name="lineColor"][value="${colVal}"]`); if(cRad) cRad.checked=true;
+            const wRad = document.querySelector(`input[name="lineWeight"][value="${s.weight}"]`); if(wRad) wRad.checked=true;
+            const mRad = document.querySelector(`input[name="mapType"][value="${s.mapType || 'osm'}"]`); if(mRad) mRad.checked=true;
+            document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || "";
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+        function closeSettingsModal(e) { if (!e || e.target.id === 'settingsModal' || e.target.classList.contains('modal-close')) document.getElementById('settingsModal').style.display = 'none'; }
+        
         function handleFileSelect(event) {
             const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
-                saveRouteToStorage(file.name, e.target.result);
-                loadGpxFromUrl(URL.createObjectURL(new Blob([e.target.result], {type: 'text/xml'})));
-            };
+            reader.onload = function(e) { saveRouteToStorage(file.name, e.target.result); loadGpxFromUrl(URL.createObjectURL(new Blob([e.target.result], {type: 'text/xml'}))); };
             reader.readAsText(file); event.target.value = '';
         }
-
         function loadGpxFromUrl(url) {
             gpxLayerGroup.clearLayers(); closeElevationChart(); currentRouteData=null; document.getElementById('ai-btn').style.display='none';
-            
-            const settings = getSettings(); // Load user settings
-
-            new L.GPX(url, { 
-                async: true, 
-                marker_options: { 
-                    startIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-start.png', 
-                    endIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-end.png', 
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-shadow.png' 
-                }, 
-                polyline_options: { 
-                    color: settings.color, 
-                    opacity: 0.8, 
-                    weight: settings.weight, 
-                    lineCap: 'round' 
-                } 
-            }).on('loaded', function(e) {
+            const s = getSettings();
+            new L.GPX(url, { async: true, marker_options: { startIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-start.png', endIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-end.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-shadow.png' }, polyline_options: { color: s.color, opacity: 0.8, weight: s.weight, lineCap: 'round' } }).on('loaded', function(e) {
                 map.fitBounds(e.target.getBounds());
                 currentRouteData = { dist: (e.target.get_distance()/1000).toFixed(2), gain: e.target.get_elevation_gain().toFixed(0), maxEle: e.target.get_elevation_max().toFixed(0) };
                 if (e.target.get_elevation_data().length > 0) { drawElevationChart(e.target.get_elevation_data()); document.getElementById('ai-btn').style.display='block'; }
             }).addTo(gpxLayerGroup);
         }
-
-        // --- Screenshot Function ---
         function saveMapAsImage() {
-            // Χρησιμοποιούμε html2canvas
-            // Σημείωση: Λόγω CORS (ασφάλεια browser), τα πλακίδια του χάρτη (tiles) ίσως δεν εμφανιστούν αν ο server δεν το επιτρέπει.
-            // To OpenStreetMap συνήθως επιτρέπει.
-            
-            const mapElement = document.body; // Capture whole body or just #map
-            
-            // Κρύβουμε προσωρινά τα controls για το screenshot
-            const controls = document.querySelector('.controls-box');
-            const chatFab = document.querySelector('.chat-fab');
-            const infoBox = document.querySelector('.info-box'); // Αν θέλουμε να το κρατήσουμε, το αφήνουμε
-            
-            controls.style.display = 'none';
-            chatFab.style.display = 'none';
-
-            html2canvas(document.body, {
-                useCORS: true, // Σημαντικό για να φορτώσουν τα tiles
-                allowTaint: true,
-                scrollY: -window.scrollY
-            }).then(canvas => {
-                // Επαναφορά controls
-                controls.style.display = 'flex';
-                chatFab.style.display = 'flex';
-
-                // Λήψη εικόνας
-                const link = document.createElement('a');
-                link.download = 'parnitha-map.jpg';
-                link.href = canvas.toDataURL('image/jpeg', 0.9);
-                link.click();
-            }).catch(err => {
-                console.error(err);
-                alert("Σφάλμα κατά τη λήψη εικόνας (πιθανόν λόγω ρυθμίσεων ασφαλείας του browser). Δοκιμάστε την 'Εκτύπωση' για PDF.");
-                controls.style.display = 'flex';
-                chatFab.style.display = 'flex';
-            });
+            const c=document.querySelector('.controls-box'), f=document.querySelector('.chat-fab'), i=document.querySelector('.info-box');
+            c.style.display='none'; f.style.display='none'; i.style.display='none';
+            html2canvas(document.body, { useCORS: true, allowTaint: true, scrollY: -window.scrollY }).then(canvas => {
+                c.style.display='flex'; f.style.display='flex'; i.style.display='block';
+                const l=document.createElement('a'); l.download='map.jpg'; l.href=canvas.toDataURL('image/jpeg',0.9); l.click();
+            }).catch(e=>{ c.style.display='flex'; f.style.display='flex'; i.style.display='block'; alert("Error."); });
         }
-
-        // --- AI & Other Functions (Same as before) ---
-        function getApiKey() {
-            if (GLOBAL_API_KEY && GLOBAL_API_KEY.length > 5) return GLOBAL_API_KEY;
-            return localStorage.getItem('gemini_api_key') || "";
+        function getApiKey() { return (GLOBAL_API_KEY && GLOBAL_API_KEY.length > 5) ? GLOBAL_API_KEY : (localStorage.getItem('gemini_api_key') || ""); }
+        async function callGemini(p) {
+            const k = getApiKey(); if(!k) return "⚠️ Missing Key";
+            try { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${k}`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({contents:[{parts:[{text:p}]}]})});
+            if(!r.ok) throw new Error(); const d=await r.json(); return d.candidates?.[0]?.content?.parts?.[0]?.text||"Error"; } catch(e){return "Connection Error";}
         }
-        async function callGemini(prompt) {
-            const userKey = getApiKey();
-            if (!userKey) return "⚠️ Δεν έχει ρυθμιστεί κλειδί AI.";
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${userKey}`;
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
-            try {
-                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error();
-                const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Error";
-            } catch (error) { return "Πρόβλημα σύνδεσης με AI."; }
-        }
-        
-        // Library, Share, Charts (ίδια με πριν)
         async function fetchGitHubFiles() {
-            const listEl = document.getElementById('githubList'); const loadingEl = document.getElementById('githubLoading');
-            listEl.innerHTML = ''; loadingEl.style.display = 'block';
-            try {
-                const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/`);
-                const data = await response.json();
-                const gpxFiles = data.filter(item => item.name.endsWith('.gpx'));
-                loadingEl.style.display = 'none';
-                if (gpxFiles.length === 0) { listEl.innerHTML = '<li class="empty-library">Κενό.</li>'; return; }
-                gpxFiles.forEach(file => {
-                    const li = document.createElement('li'); li.className = 'library-item';
-                    li.innerHTML = `<span class="library-name" onclick="loadAndCloseLibrary('${file.download_url}')"><i class="fas fa-cloud" style="color:#3498db; margin-right:8px;"></i> ${file.name}</span>`;
-                    listEl.appendChild(li);
-                });
-            } catch (error) { loadingEl.innerHTML = 'Σφάλμα φόρτωσης.'; }
+            const l = document.getElementById('githubList'); l.innerHTML='Loading...';
+            try { const r = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/`); const d=await r.json();
+            l.innerHTML=''; d.filter(i=>i.name.endsWith('.gpx')).forEach(f=>{ l.innerHTML+=`<li class="library-item" onclick="loadAndCloseLibrary('${f.download_url}')"><span class="library-name"><i class="fas fa-cloud" style="color:#3498db; margin-right:5px;"></i> ${f.name}</span></li>`; });
+            if(!l.innerHTML) l.innerHTML='<li class="empty-library">Empty.</li>'; } catch(e){l.innerHTML='Error loading GitHub.';}
         }
-        function saveRouteToStorage(name, gpxData) {
-            try {
-                let routes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                if (!routes.some(r => r.name === name)) { routes.push({ name: name, data: gpxData }); localStorage.setItem(STORAGE_KEY, JSON.stringify(routes)); }
-            } catch (e) {}
+        function saveRouteToStorage(n,d){ try{let r=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); if(!r.some(x=>x.name===n)){r.push({name:n,data:d});localStorage.setItem(STORAGE_KEY,JSON.stringify(r));}}catch(e){}}
+        function renderLocalLibrary(){
+            const l=document.getElementById('localList'); l.innerHTML=''; const r=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+            if(r.length===0) l.innerHTML='<li class="empty-library">Empty.</li>';
+            else r.forEach(x=>{ const u=URL.createObjectURL(new Blob([x.data],{type:'application/gpx+xml'})); l.innerHTML+=`<li class="library-item"><span class="library-name" onclick="loadAndCloseLibrary('${u}')"><i class="fas fa-file-code" style="color:#f39c12; margin-right:5px;"></i> ${x.name}</span><i class="fas fa-trash library-delete" onclick="let rr=JSON.parse(localStorage.getItem('${STORAGE_KEY}')||'[]'); rr=rr.filter(z=>z.name!=='${x.name}'); localStorage.setItem('${STORAGE_KEY}',JSON.stringify(rr)); renderLocalLibrary();"></i></li>`; });
         }
-        function getLocalRoutes() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-        function deleteLocalRoute(name) { let routes = getLocalRoutes().filter(r => r.name !== name); localStorage.setItem(STORAGE_KEY, JSON.stringify(routes)); renderLocalLibrary(); }
-        function renderLocalLibrary() {
-            const listEl = document.getElementById('localList'); listEl.innerHTML = '';
-            const routes = getLocalRoutes();
-            if (routes.length === 0) { listEl.innerHTML = '<li class="empty-library">Κενό.</li>'; return; }
-            routes.forEach(route => {
-                const blob = new Blob([route.data], {type: 'application/gpx+xml'}); const url = URL.createObjectURL(blob);
-                const li = document.createElement('li'); li.className = 'library-item';
-                li.innerHTML = `<span class="library-name" onclick="loadAndCloseLibrary('${url}')"><i class="fas fa-file-code" style="color:#f39c12; margin-right:8px;"></i> ${route.name}</span><i class="fas fa-trash library-delete" onclick="deleteLocalRoute('${route.name}')"></i>`;
-                listEl.appendChild(li);
-            });
-        }
-        function openLibrary() { document.getElementById('libraryModal').style.display = 'flex'; fetchGitHubFiles(); renderLocalLibrary(); }
-        function closeLibraryModal(e) { if (!e || e.target.id === 'libraryModal' || e.target.classList.contains('modal-close')) document.getElementById('libraryModal').style.display = 'none'; }
-        function loadAndCloseLibrary(url) { loadGpxFromUrl(url); document.getElementById('libraryModal').style.display = 'none'; }
-        function createShareLink() { const userUrl = prompt("Link αρχείου GPX:"); if (userUrl) { const shareUrl = `${window.location.href.split('?')[0]}?gpx=${encodeURIComponent(userUrl)}`; navigator.clipboard.writeText(shareUrl).then(() => alert("Link αντιγράφηκε!"), () => prompt("Link:", shareUrl)); } }
-        async function analyzeRouteWithAI() {
-            if (!currentRouteData) return; document.getElementById('aiModal').style.display = 'flex'; document.getElementById('aiModalContent').innerHTML = '<div style="text-align:center">Φόρτωση...</div>';
-            const prompt = `Ανάλυσε διαδρομή Πάρνηθας: ${currentRouteData.dist}km, +${currentRouteData.gain}m gain.`;
-            const response = await callGemini(prompt);
-            document.getElementById('aiModalContent').innerHTML = response.replace(/\*\*/g, '<b>').replace(/\*\*/g, '</b>').replace(/\n/g, '<br>');
-        }
-        function closeAiModal(e) { if (!e || e.target.id === 'aiModal' || e.target.classList.contains('modal-close')) document.getElementById('aiModal').style.display = 'none'; }
-        function toggleChat() { const w = document.getElementById('chatWindow'); w.style.display = w.style.display === 'flex' ? 'none' : 'flex'; }
-        function handleEnter(e) { if (e.key === 'Enter') sendMessage(); }
-        async function sendMessage() {
-            const input = document.getElementById('chatInput'); const msg = input.value.trim(); if(!msg) return;
-            addMessage(msg, 'msg-user'); input.value='';
-            const res = await callGemini(`User asked: ${msg}. Reply as Parnitha ranger.`);
-            addMessage(res, 'msg-ai');
-        }
-        function addMessage(t, c) { const d = document.createElement('div'); d.className = `message ${c}`; d.innerText = t; const b = document.getElementById('chatMessages'); b.appendChild(d); b.scrollTop = b.scrollHeight; }
-        function clearRoutes() { gpxLayerGroup.clearLayers(); closeElevationChart(); currentRouteData=null; map.setView([38.168, 23.722], 14); }
-        function drawElevationChart(data) {
-            const ctx = document.getElementById('elevationChart').getContext('2d'); document.getElementById('elevation-container').style.display='flex';
-            if(elevationChart) elevationChart.destroy();
-            const labels = [], vals = []; const rate = Math.ceil(data.length/500);
-            for(let i=0; i<data.length; i+=rate) { labels.push(data[i][0].toFixed(1)); vals.push(data[i][1]); }
-            elevationChart = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ data: vals, borderColor: '#2e7d32', backgroundColor: 'rgba(46,125,50,0.1)', fill: true, pointRadius: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: true }, y: { display: true } } } });
-        }
-        function closeElevationChart() { document.getElementById('elevation-container').style.display = 'none'; if(elevationChart) elevationChart.destroy(); }
+        function openLibrary(){ document.getElementById('libraryModal').style.display='flex'; fetchGitHubFiles(); renderLocalLibrary(); }
+        function closeLibraryModal(e){ if(!e||e.target.id==='libraryModal'||e.target.classList.contains('modal-close')) document.getElementById('libraryModal').style.display='none'; }
+        function loadAndCloseLibrary(u){ loadGpxFromUrl(u); document.getElementById('libraryModal').style.display='none'; }
+        function createShareLink(){ const u=prompt("Link GPX:"); if(u) {const s=`${window.location.href.split('?')[0]}?gpx=${encodeURIComponent(u)}`; navigator.clipboard.writeText(s).then(()=>alert("Copied!"),()=>prompt("Link:",s));}}
+        async function analyzeRouteWithAI(){ if(!currentRouteData)return; document.getElementById('aiModal').style.display='flex'; document.getElementById('aiModalContent').innerHTML='Loading...'; const r=await callGemini(`Ανάλυσε: ${currentRouteData.dist}km, +${currentRouteData.gain}m gain.`); document.getElementById('aiModalContent').innerHTML=r.replace(/\*\*/g,'<b>').replace(/\n/g,'<br>'); }
+        function closeAiModal(e){ if(!e||e.target.id==='aiModal'||e.target.classList.contains('modal-close')) document.getElementById('aiModal').style.display='none'; }
+        function toggleChat(){ const w=document.getElementById('chatWindow'); w.style.display=w.style.display==='flex'?'none':'flex'; }
+        function handleEnter(e){ if(e.key==='Enter') sendMessage(); }
+        async function sendMessage(){ const i=document.getElementById('chatInput'); const m=i.value.trim(); if(!m)return; addMessage(m,'msg-user'); i.value=''; const r=await callGemini(`User: ${m}. Reply as Ranger.`); addMessage(r,'msg-ai'); }
+        function addMessage(t,c){ const d=document.createElement('div'); d.className=`message ${c}`; d.innerText=t; document.getElementById('chatMessages').appendChild(d); }
+        function clearRoutes(){ gpxLayerGroup.clearLayers(); closeElevationChart(); currentRouteData=null; map.setView([38.168, 23.722], 14); }
+        function drawElevationChart(d){ const c=document.getElementById('elevationChart').getContext('2d'); document.getElementById('elevation-container').style.display='flex'; if(elevationChart)elevationChart.destroy(); const l=[],v=[]; const r=Math.ceil(d.length/500); for(let i=0;i<d.length;i+=r){l.push(d[i][0].toFixed(1));v.push(d[i][1]);} elevationChart=new Chart(c,{type:'line',data:{labels:l,datasets:[{data:v,borderColor:'#2e7d32',backgroundColor:'rgba(46,125,50,0.1)',fill:true,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:true},y:{display:true}}}}); }
+        function closeElevationChart(){ document.getElementById('elevation-container').style.display='none'; if(elevationChart)elevationChart.destroy(); }
     </script>
 </body>
 </html>
