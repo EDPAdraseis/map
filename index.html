@@ -18,28 +18,98 @@
         #map { width: 100%; height: 100vh; z-index: 1; cursor: grab; }
         #map.adding-point { cursor: crosshair; }
 
-        /* --- COMPASS STYLE (NEO - ΕΙΚΟΝΑ) --- */
+        /* --- COMPASS STYLE (CSS CONSTRUCTION) --- */
         .compass-container {
             position: absolute;
-            bottom: 120px; /* Πάνω από το Chat FAB (40px + 60px + 20px κενό) */
-            right: 20px;   /* Δεξιά μεριά */
-            top: auto;     /* Ακύρωση του top */
-            left: auto;    /* Ακύρωση του left */
+            bottom: 120px; /* Πάνω από το Chat */
+            right: 20px;
             z-index: 900;
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(145deg, #ffffff, #e6e6e6); /* Metallic look */
+            border-radius: 50%;
+            box-shadow: 
+                5px 5px 10px #bfbfbf, 
+                -5px -5px 10px #ffffff,
+                inset 0 0 2px rgba(0,0,0,0.1);
+            border: 2px solid #fff;
             display: flex;
             justify-content: center;
             align-items: center;
             pointer-events: none;
         }
 
-        .compass-rose-img {
+        .compass-face {
+            position: relative;
             width: 100%;
             height: 100%;
-            object-fit: contain;
-            transition: transform 0.2s cubic-bezier(0.1, 0.7, 1.0, 0.1);
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+            border-radius: 50%;
+        }
+
+        /* Γράμματα */
+        .compass-mark {
+            position: absolute;
+            font-size: 10px;
+            font-weight: bold;
+            color: #555;
+            font-family: 'Arial', sans-serif;
+        }
+        .compass-mark.n { top: 4px; left: 50%; transform: translateX(-50%); color: #e74c3c; } /* N is Red */
+        .compass-mark.s { bottom: 4px; left: 50%; transform: translateX(-50%); }
+        .compass-mark.e { right: 5px; top: 50%; transform: translateY(-50%); }
+        .compass-mark.w { left: 5px; top: 50%; transform: translateY(-50%); }
+
+        /* Η Βελόνα */
+        .compass-needle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 40px;
+            background: transparent;
+            transform-origin: center center;
+            transform: translate(-50%, -50%) rotate(0deg); /* Η περιστροφή γίνεται εδώ */
+            transition: transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44); /* Ομαλή κίνηση με "ελατήριο" */
+        }
+
+        /* Το κόκκινο μέρος της βελόνας (Βορράς) */
+        .compass-needle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0; 
+            height: 0; 
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 20px solid #e74c3c; /* Κόκκινο */
+            transform: translate(-2px, -2px); /* Κεντράρισμα */
+        }
+
+        /* Το μαύρο μέρος της βελόνας (Νότος) */
+        .compass-needle::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0; 
+            height: 0; 
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 20px solid #333; /* Μαύρο */
+            transform: translate(-2px, 2px); /* Κεντράρισμα */
+        }
+
+        /* Κεντρική βίδα */
+        .compass-center {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 8px; height: 8px;
+            background: silver;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            z-index: 2;
         }
 
         /* --- 3D BUTTON STYLES --- */
@@ -171,14 +241,7 @@
             .logo-box { width: 80px; bottom: 20px; left: auto; right: 20px; display: none; }
             #elevation-container { width: 95%; height: 180px; bottom: 10px; }
             /* Πυξίδα σε κινητά: Κάτω δεξιά πάνω από Chat */
-            .compass-container { 
-                top: auto;
-                left: auto;
-                bottom: 110px; 
-                right: 20px; 
-                width: 50px; 
-                height: 50px; 
-            }
+            .compass-container { top: auto; left: auto; bottom: 110px; right: 20px; width: 50px; height: 50px; }
         }
     </style>
 </head>
@@ -189,10 +252,16 @@
         <p>Χάρτης δράσης ή Πεζοπορικής Διαδρομής</p>
     </div>
 
-    <!-- COMPASS (ΕΙΚΟΝΑ) -->
+    <!-- COMPASS (CSS) -->
     <div id="compass" class="compass-container">
-        <img src="compass.png" id="compassRose" class="compass-rose-img" alt="Πυξίδα" 
-             onerror="this.style.display='none'; document.getElementById('compass').style.display='none';">
+        <div class="compass-face">
+            <div class="compass-mark n">N</div>
+            <div class="compass-mark s">S</div>
+            <div class="compass-mark e">E</div>
+            <div class="compass-mark w">W</div>
+            <div id="compassNeedle" class="compass-needle"></div>
+            <div class="compass-center"></div>
+        </div>
     </div>
 
     <!-- MAIN CONTROLS -->
@@ -397,8 +466,10 @@
                         heading = 360 - event.alpha; // Android/Web
                     }
                     if (heading !== null) {
-                        const compassRose = document.getElementById('compassRose');
-                        if(compassRose) compassRose.style.transform = `rotate(${-heading}deg)`; // Rotate image opposite to heading to point North
+                        // Rotate Needle: Needle points to North. 
+                        // If Heading is 0 (North), needle should point up (0).
+                        // If Heading is 90 (East), needle should point Left (-90) to point North.
+                        document.getElementById('compassNeedle').style.transform = `translate(-50%, -50%) rotate(${-heading}deg)`;
                     }
                 }, true);
             }
@@ -545,8 +616,8 @@
             gpsLayerGroup.clearLayers();
             
             const heading = e.heading || 0;
-            // Also update Compass Rose if location has heading
-            if(heading) document.getElementById('compassRose').style.transform = `rotate(${-heading}deg)`; // Negative to rotate image against heading
+            // Compass needle update (already done in deviceorientation for mobile, fallback here?)
+            // document.getElementById('compassNeedle').style.transform = `translate(-50%, -50%) rotate(${-heading}deg)`;
 
             const gpsIconHtml = `
                 <div style="position:relative; width:24px; height:24px;">
