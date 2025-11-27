@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Χάρτης Πάρνηθας - AI Edition</title>
     
     <!-- Leaflet CSS -->
@@ -14,129 +14,78 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background-color: #f0f2f5; }
+        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background-color: #f0f2f5; overflow: hidden; }
         #map { width: 100%; height: 100vh; z-index: 1; cursor: grab; }
         #map.adding-point { cursor: crosshair; }
 
         /* --- 3D BUTTON STYLES --- */
         .control-btn, .ai-analyze-btn, .dropdown-item, .settings-save-btn, .delete-marker-btn {
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: bold;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            position: relative;
-            transition: all 0.1s ease;
-            outline: none;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 8px 14px;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.2); /* Η 3D σκιά */
-            transform: translateY(0);
+            border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            position: relative; transition: all 0.1s ease; outline: none; text-transform: uppercase;
+            letter-spacing: 0.5px; padding: 8px 14px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transform: translateY(0);
         }
-
         .control-btn:active, .ai-analyze-btn:active, .dropdown-item:active, .settings-save-btn:active, .delete-marker-btn:active {
-            transform: translateY(4px); /* Κίνηση προς τα κάτω */
-            box-shadow: 0 0 0 rgba(0,0,0,0.2); /* Εξαφάνιση σκιάς */
+            transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0.2);
         }
 
-        /* Χρώματα Κουμπιών 3D */
+        /* Χρώματα Κουμπιών */
         .control-btn { background: #ffffff; color: #333; border: 1px solid #e0e0e0; border-bottom-color: #bdc3c7; }
         
+        /* GPS Button - Ειδικό Στυλ */
         .btn-gps { background: #3498db; color: white; border-color: #2980b9; border-bottom-color: #1f6391; box-shadow: 0 4px 0 #1f6391; }
-        .btn-gps.active { background: #2ecc71; border-color: #27ae60; border-bottom-color: #1e8449; box-shadow: 0 4px 0 #1e8449; }
+        .btn-gps.active { background: #2ecc71; border-color: #27ae60; border-bottom-color: #1e8449; box-shadow: 0 4px 0 #1e8449; animation: pulse 2s infinite; }
         
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); } 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
+
         .btn-add-point { background: #e67e22; color: white; border-color: #d35400; border-bottom-color: #a04000; box-shadow: 0 4px 0 #a04000; }
         .btn-add-point.active { background: #c0392b; border-color: #922b21; box-shadow: 0 4px 0 #641e16; }
-
         .btn-save-html { background: #16a085; color: white; border-color: #1abc9c; border-bottom-color: #0e6655; box-shadow: 0 4px 0 #0e6655; }
-        
-        .btn-upload { color: #3388ff; border-bottom-color: #aacbff; }
-        .btn-library { color: #27ae60; border-bottom-color: #a9dfbf; }
-        .btn-email { color: #8e44ad; border-bottom-color: #d2b4de; }
-        .btn-clear { color: #e74c3c; border-bottom-color: #f5b7b1; }
-        .btn-settings { color: #7f8c8d; border-bottom-color: #d7dbdd; }
-        
-        /* Dropdown Share Button 3D */
         .btn-share-main { background: #9b59b6; color: white; border-color: #8e44ad; border-bottom-color: #6c3483; box-shadow: 0 4px 0 #6c3483; }
-        
-        .ai-analyze-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; border: none; 
-            box-shadow: 0 4px 0 #4a3b75;
-        }
+        .ai-analyze-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; box-shadow: 0 4px 0 #4a3b75; }
 
-        /* --- DROPDOWN MENU --- */
-        .dropdown-container {
-            position: relative;
-            display: inline-block;
-        }
+        /* Dropdown Menu */
+        .dropdown-container { position: relative; display: inline-block; }
         .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 120%; /* Εμφάνιση κάτω από το κουμπί */
-            right: 0;
-            background-color: white;
-            min-width: 180px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-            z-index: 2000;
-            border-radius: 8px;
-            border: 1px solid #eee;
-            padding: 5px;
-            flex-direction: column;
-            gap: 5px;
+            display: none; position: absolute; top: 120%; right: 0; background-color: white; min-width: 180px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2); z-index: 2000; border-radius: 8px; border: 1px solid #eee; padding: 5px; flex-direction: column; gap: 5px;
         }
         .dropdown-menu.show { display: flex; animation: fadeIn 0.2s; }
-        .dropdown-item {
-            width: 100%;
-            text-align: left;
-            justify-content: flex-start;
-            background: white;
-            color: #333;
-            border: 1px solid #eee;
-            border-bottom: 2px solid #ddd;
-            box-shadow: none; /* Λιγότερο έντονο 3D μέσα στο μενού */
-            padding: 8px;
-            margin-bottom: 2px;
-        }
+        .dropdown-item { width: 100%; text-align: left; justify-content: flex-start; background: white; color: #333; border: 1px solid #eee; border-bottom: 2px solid #ddd; box-shadow: none; padding: 8px; margin-bottom: 2px; }
         .dropdown-item:hover { background-color: #f8f9fa; }
-        .dropdown-item:active { transform: translateY(2px); border-bottom-width: 0; margin-bottom: 4px; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-
-        /* Στυλ για το Popup */
-        .custom-popup .leaflet-popup-content-wrapper {
-            background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 3px 14px rgba(0,0,0,0.4); text-align: center;
-        }
+        /* Popup */
+        .custom-popup .leaflet-popup-content-wrapper { background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 3px 14px rgba(0,0,0,0.4); text-align: center; }
         .popup-title { font-size: 18px; font-weight: bold; color: #2c3e50; display: block; }
         .popup-desc { font-size: 14px; color: #555; }
         .delete-marker-btn { background: #e74c3c; color: white; box-shadow: 0 3px 0 #c0392b; font-size: 11px; padding: 4px 8px; margin-top: 5px;}
 
-        /* Κουτί τίτλου */
+        /* Info Box */
         .info-box {
-            position: absolute; top: 20px; left: 60px; z-index: 1000;
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
             background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); max-width: 250px;
-            border-bottom: 4px solid #ddd; /* 3D effect στο box */
+            border-bottom: 4px solid #ddd;
         }
         .info-box h2 { margin: 0 0 5px 0; font-size: 16px; color: #2e7d32; text-transform: uppercase; }
         .info-box p { margin: 0; font-size: 11px; color: #666; }
 
-        /* Κουτιά Ελέγχου */
-        .controls-box { position: absolute; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; max-width: 65%; pointer-events: none; }
-        .controls-box > * { pointer-events: auto; } /* Επαναφορά κλικ στα παιδιά */
-
-        /* Tooltips */
-        .control-btn[data-tooltip]:hover::after, .ai-analyze-btn[data-tooltip]:hover::after, .btn-share-main[data-tooltip]:hover::after {
-            content: attr(data-tooltip); position: absolute; top: 125%; left: 50%; transform: translateX(-50%);
-            background-color: #333; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap;
-            pointer-events: none; z-index: 3000;
+        /* Controls Box */
+        .controls-box { 
+            position: absolute; top: 20px; right: 20px; z-index: 1000; 
+            display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; 
+            max-width: 65%; pointer-events: none; 
         }
-        @media (hover: none) { [data-tooltip]:hover::after { display: none; } }
+        .controls-box > * { pointer-events: auto; }
+
+        /* Tooltips - Hidden on Touch */
+        @media (hover: hover) {
+            .control-btn[data-tooltip]:hover::after, .ai-analyze-btn[data-tooltip]:hover::after, .btn-share-main[data-tooltip]:hover::after {
+                content: attr(data-tooltip); position: absolute; top: 125%; left: 50%; transform: translateX(-50%);
+                background-color: #333; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap;
+                pointer-events: none; z-index: 3000;
+            }
+        }
 
         #file-input { display: none; }
         .logo-box { position: absolute; bottom: 30px; left: 20px; z-index: 9999; width: 150px; height: auto; pointer-events: none; filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); transition: width 0.3s; }
@@ -153,9 +102,9 @@
         #elevationChart { width: 100% !important; height: 160px !important; }
 
         /* Chat Styles */
-        .chat-fab { position: absolute; bottom: 30px; right: 20px; z-index: 3000; width: 60px; height: 60px; background: #2e7d32; border-radius: 50%; box-shadow: 0 6px 0 #1e6f2e, 0 10px 10px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; font-size: 26px; transition: transform 0.1s; border: 2px solid #fff; }
+        .chat-fab { position: absolute; bottom: 40px; right: 20px; z-index: 3000; width: 60px; height: 60px; background: #2e7d32; border-radius: 50%; box-shadow: 0 6px 0 #1e6f2e, 0 10px 10px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; font-size: 26px; transition: transform 0.1s; border: 2px solid #fff; }
         .chat-fab:active { transform: translateY(6px); box-shadow: 0 0 0 #1e6f2e; }
-        .chat-window { position: absolute; bottom: 100px; right: 20px; width: 300px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 3000; display: none; flex-direction: column; overflow: hidden; border: 1px solid #ddd; }
+        .chat-window { position: absolute; bottom: 110px; right: 20px; width: 300px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 3000; display: none; flex-direction: column; overflow: hidden; border: 1px solid #ddd; }
         .chat-header { background: #2e7d32; color: white; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .chat-messages { flex: 1; padding: 10px; overflow-y: auto; background: #f9f9f9; font-size: 13px; }
         .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; max-width: 80%; word-wrap: break-word; }
@@ -172,18 +121,42 @@
         .modal-close { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #888; }
         .ai-result-title { font-size: 18px; font-weight: bold; color: #667eea; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;}
         
-        /* Settings & Library Styles */
+        /* Settings */
         .settings-group { margin-bottom: 15px; }
         .settings-label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 13px; color: #555; }
         .library-list { list-style: none; padding: 0; margin: 0; }
         .library-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
         .settings-input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; box-sizing: border-box; }
+        .settings-save-btn { background: #2e7d32; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px;}
         .radio-group { display: flex; gap: 15px; flex-wrap: wrap; }
         .color-preview { width: 16px; height: 16px; border-radius: 50%; display: inline-block; border: 1px solid #ddd; vertical-align: middle;}
 
-        /* Print & Mobile */
-        @media print { .controls-box, .chat-fab, .chat-window, .info-box, .leaflet-control-zoom, #elevation-container, .delete-marker-btn { display: none !important; } #map { height: 100vh; width: 100%; } }
-        @media (max-width: 768px) { .info-box { top: 10px; left: 50px; padding: 8px; max-width: 150px; } .info-box p { display: none; } .controls-box { top: 60px; left: 10px; justify-content: flex-start; max-width: 95%; } .chat-window { width: 90%; right: 5%; bottom: 80px; height: 50vh; } }
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .info-box { top: 10px; left: 10px; padding: 8px; max-width: 140px; }
+            .info-box h2 { font-size: 13px; margin: 0; }
+            .info-box p { display: none; }
+            
+            /* Κουμπιά κάτω από το Info Box */
+            .controls-box {
+                top: 60px; /* Χαμηλότερα */
+                left: 10px; /* Αριστερά στοίχιση */
+                right: auto;
+                justify-content: flex-start;
+                max-width: 95%;
+                gap: 8px;
+            }
+            
+            .control-btn { padding: 8px 10px; font-size: 12px; }
+            
+            /* Απομάκρυνση Zoom Controls */
+            .leaflet-top.leaflet-left { top: auto !important; bottom: 20px !important; left: 20px !important; }
+            .leaflet-control-zoom { margin-bottom: 80px; } /* Για να μην πέφτει πάνω στο Chat */
+            
+            .chat-window { width: 90%; right: 5%; bottom: 100px; height: 50vh; }
+            .logo-box { width: 80px; bottom: 20px; left: auto; right: 20px; display: none; } /* Κρύβουμε το logo στα πολύ μικρά αν ενοχλεί */
+            #elevation-container { width: 95%; height: 180px; bottom: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -199,49 +172,42 @@
             <i class="fas fa-crosshairs"></i>
         </button>
 
-        <!-- Προσθήκη Σημείου -->
         <button id="addPointBtn" class="control-btn btn-add-point" data-tooltip="Προσθήκη Σημείου" onclick="toggleAddPointMode()">
             <i class="fas fa-map-marker-alt"></i>
         </button>
 
-        <!-- Αποθήκευση HTML -->
         <button class="control-btn btn-save-html" data-tooltip="Αποθήκευση Αλλαγών" onclick="downloadUpdatedHtml()">
             <i class="fas fa-save"></i>
         </button>
 
-        <!-- Φόρτωση GPX -->
-        <button class="control-btn btn-upload" data-tooltip="Φόρτωση GPX" onclick="document.getElementById('file-input').click()">
+        <button class="control-btn btn-upload" data-tooltip="Φορτώστε αρχείο GPX" onclick="document.getElementById('file-input').click()">
             <i class="fas fa-folder-open"></i>
         </button>
         
-        <!-- Βιβλιοθήκη -->
         <button class="control-btn btn-library" data-tooltip="Βιβλιοθήκη" onclick="openLibrary()">
             <i class="fas fa-book"></i>
         </button>
 
-        <!-- NEO: Dropdown SHARE (Share, Print, Save JPG) -->
+        <!-- Dropdown SHARE -->
         <div class="dropdown-container">
             <button class="control-btn btn-share-main" data-tooltip="Share" onclick="toggleShareMenu()">
                 <i class="fas fa-share-alt"></i> Share
             </button>
             <div id="shareDropdown" class="dropdown-menu">
-                <button class="dropdown-item" onclick="createShareLink()"><i class="fas fa-link"></i> Αντιγραφή Link</button>
-                <button class="dropdown-item" onclick="window.print()"><i class="fas fa-print"></i> Εκτύπωση / PDF</button>
-                <button class="dropdown-item" onclick="saveMapAsImage()"><i class="fas fa-camera"></i> Αποθήκευση JPG</button>
+                <button class="dropdown-item" onclick="createShareLink()"><i class="fas fa-link"></i> Link</button>
+                <button class="dropdown-item" onclick="window.print()"><i class="fas fa-print"></i> PDF/Print</button>
+                <button class="dropdown-item" onclick="saveMapAsImage()"><i class="fas fa-camera"></i> JPG</button>
             </div>
         </div>
 
-        <!-- Διαγραφή -->
         <button class="control-btn btn-clear" data-tooltip="Διαγραφή GPX" onclick="clearRoutes()">
             <i class="fas fa-trash"></i>
         </button>
         
-        <!-- Email -->
         <button class="control-btn btn-email" data-tooltip="Επικοινωνία" onclick="window.location.href='mailto:info@drasiparnithas.gr?subject=Επικοινωνία από τον Ψηφιακό Χάρτη'">
             <i class="fas fa-envelope"></i>
         </button>
 
-        <!-- Ρυθμίσεις -->
         <button class="control-btn btn-settings" data-tooltip="Ρυθμίσεις" onclick="openSettings()">
             <i class="fas fa-cog"></i>
         </button>
@@ -299,7 +265,6 @@
         <div class="modal-content">
             <span class="modal-close" onclick="closeSettingsModal(null)">&times;</span>
             <div class="ai-result-title"><i class="fas fa-cog"></i> Ρυθμίσεις</div>
-            
             <div class="settings-group">
                 <label class="settings-label">Τύπος Χάρτη:</label>
                 <div class="radio-group">
@@ -308,7 +273,6 @@
                     <label><input type="radio" name="mapType" value="topo"> Τοπογραφικός</label>
                 </div>
             </div>
-
             <div class="settings-group">
                 <label class="settings-label">Χρώμα Γραμμής:</label>
                 <div class="radio-group">
@@ -377,7 +341,6 @@
         var permanentMarkers = [];
         // -------------------------
 
-        // --- MAP LAYERS ---
         const layers = {
             osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }),
             satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri' }),
@@ -385,7 +348,10 @@
         };
 
         const map = L.map('map', { zoomControl: false }).setView([38.168, 23.722], 14);
-        L.control.zoom({ position: 'topleft' }).addTo(map);
+        
+        // ΜΕΤΑΚΙΝΗΣΗ ZOOM CONTROLS ΚΑΤΩ ΔΕΞΙΑ (Για να μην ενοχλούν στα κινητά)
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        
         layers.osm.addTo(map);
         let currentLayer = layers.osm;
 
@@ -408,39 +374,30 @@
             updateMapLayer(settings.mapType);
         };
 
-        // --- DROPDOWN LOGIC (SHARE) ---
+        // --- SHARE MENU ---
         function toggleShareMenu() {
             const menu = document.getElementById('shareDropdown');
-            if (menu.classList.contains('show')) {
-                menu.classList.remove('show');
-            } else {
-                menu.classList.add('show');
-            }
+            if (menu.classList.contains('show')) menu.classList.remove('show');
+            else menu.classList.add('show');
         }
-        
-        // Close dropdown when clicking outside
         window.onclick = function(event) {
             if (!event.target.matches('.btn-share-main') && !event.target.parentElement.matches('.btn-share-main')) {
                 const dropdowns = document.getElementsByClassName("dropdown-menu");
                 for (let i = 0; i < dropdowns.length; i++) {
                     const openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
+                    if (openDropdown.classList.contains('show')) openDropdown.classList.remove('show');
                 }
             }
         }
 
-        // --- GPS TRACKING ---
+        // --- GPS ---
         function toggleGPS() {
             const btn = document.getElementById('gpsBtn');
             if (isGpsActive) {
-                map.stopLocate(); gpsLayerGroup.clearLayers(); isGpsActive = false;
-                btn.classList.remove('active');
+                map.stopLocate(); gpsLayerGroup.clearLayers(); isGpsActive = false; btn.classList.remove('active');
             } else {
                 map.locate({setView: true, watch: true, maxZoom: 16, enableHighAccuracy: true});
-                isGpsActive = true;
-                btn.classList.add('active');
+                isGpsActive = true; btn.classList.add('active');
             }
         }
         map.on('locationfound', function(e) {
@@ -448,9 +405,9 @@
             const radius = e.accuracy / 2;
             L.circle(e.latlng, { radius: radius, color: '#2980b9', weight: 1, fillOpacity: 0.1 }).addTo(gpsLayerGroup);
             const gpsIcon = L.divIcon({ className: 'gps-icon', html: '<div style="width: 15px; height: 15px; background: #2980b9; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>', iconSize: [15, 15] });
-            L.marker(e.latlng, {icon: gpsIcon}).addTo(gpsLayerGroup).bindPopup("Βρίσκεστε εδώ!").openPopup();
+            L.marker(e.latlng, {icon: gpsIcon}).addTo(gpsLayerGroup).bindPopup("Εσείς!").openPopup();
         });
-        map.on('locationerror', function(e) { alert("Δεν βρέθηκε τοποθεσία."); toggleGPS(); });
+        map.on('locationerror', function(e) { alert("Απαιτείται πρόσβαση τοποθεσίας."); toggleGPS(); });
 
         // --- MAP LAYER ---
         function updateMapLayer(type) {
@@ -511,7 +468,7 @@
             }
         }
 
-        // --- UTILS & AI ---
+        // --- SETTINGS & UTILS ---
         function getSettings() { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { color:'#3388ff', weight:6, mapType:'osm' }; } catch(e) { return { color:'#3388ff', weight:6, mapType:'osm' }; } }
         function saveSettings() {
             const apiKey = document.getElementById('apiKeyInput').value.trim();
@@ -519,10 +476,7 @@
             const color = document.querySelector('input[name="lineColor"]:checked').value;
             const weight = document.querySelector('input[name="lineWeight"]:checked').value;
             const mapType = document.querySelector('input[name="mapType"]:checked').value;
-            localStorage.setItem(SETTINGS_KEY, JSON.stringify({ 
-                color: color === 'blue' ? '#3388ff' : (color === 'red' ? '#e74c3c' : '#f1c40f'), 
-                weight: parseInt(weight), mapType: mapType
-            }));
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify({ color: color === 'blue' ? '#3388ff' : (color === 'red' ? '#e74c3c' : '#f1c40f'), weight: parseInt(weight), mapType: mapType }));
             updateMapLayer(mapType); alert("OK!"); closeSettingsModal(null);
         }
         function openSettings() {
