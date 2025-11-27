@@ -23,8 +23,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background-color: #f0f2f5; overflow: hidden; -webkit-tap-highlight-color: transparent; }
-        #map { width: 100%; height: 100vh; z-index: 1; cursor: grab; }
+        /* FIX ΓΙΑ ΛΕΥΚΗ ΟΘΟΝΗ ΣΕ ΚΙΝΗΤΑ: Χρήση 100% αντί για vh */
+        html, body { 
+            height: 100%; 
+            width: 100%; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Roboto', sans-serif; 
+            background-color: #f0f2f5; 
+            overflow: hidden; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        #map { 
+            width: 100%; 
+            height: 100%; 
+            z-index: 1; 
+            cursor: grab; 
+            background: #e5e5e5; /* Γκρι φόντο για να φαίνεται ότι φορτώνει */
+        }
         #map.adding-point { cursor: crosshair; }
 
         /* --- COMPASS STYLE --- */
@@ -108,4 +124,451 @@
         .rec-controls { display: flex; gap: 10px; justify-content: center; }
         .rec-btn-stop { background: #c0392b; color: white; border-bottom-color: #922b21; box-shadow: 0 4px 0 #922b21; flex: 1;}
         .rec-btn-pause { background: #f39c12; color: white; border-bottom-color: #d68910; box-shadow: 0 4px 0 #d68910; flex: 1;}
-        .rec-btn-pause.resume { background: #27ae60; border-
+        .rec-btn-pause.resume { background: #27ae60; border-bottom-color: #1e8449; box-shadow: 0 4px 0 #1e8449; }
+
+        /* GPS Marker */
+        .gps-arrow { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 20px solid #d35400; position: absolute; top: -5px; left: 4px; transform-origin: bottom center; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
+        .gps-dot { width: 14px; height: 14px; background: #d35400; border: 2px solid white; border-radius: 50%; position: absolute; top: 12px; left: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+
+        /* Common */
+        .custom-popup .leaflet-popup-content-wrapper { background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 3px 14px rgba(0,0,0,0.4); text-align: center; }
+        .popup-title { font-size: 18px; font-weight: bold; color: #2c3e50; display: block; }
+        .popup-desc { font-size: 14px; color: #555; }
+        .delete-marker-btn { background: #e74c3c; color: white; box-shadow: 0 3px 0 #c0392b; font-size: 11px; padding: 4px 8px; margin-top: 5px;}
+
+        .info-box { position: absolute; top: 20px; left: 20px; z-index: 1000; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); max-width: 250px; border-bottom: 4px solid #ddd; }
+        .info-box h2 { margin: 0 0 5px 0; font-size: 16px; color: #2e7d32; text-transform: uppercase; }
+        .info-box p { margin: 0; font-size: 11px; color: #666; }
+
+        .controls-box { position: absolute; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 65%; pointer-events: none; }
+        .controls-box > * { pointer-events: auto; }
+
+        @media (hover: hover) { .control-btn[data-tooltip]:hover::after, .ai-analyze-btn[data-tooltip]:hover::after, .btn-share-main[data-tooltip]:hover::after, .btn-gps-main[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; top: 125%; left: 50%; transform: translateX(-50%); background-color: #333; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap; pointer-events: none; z-index: 3000; } }
+
+        #file-input { display: none; }
+        .logo-box { position: absolute; bottom: 30px; left: 20px; z-index: 9999; width: 150px; height: auto; pointer-events: none; filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); transition: width 0.3s; }
+
+        #elevation-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80%; max-width: 800px; height: 220px; background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 2000; padding: 10px 20px 10px 10px; display: none; flex-direction: column; border-bottom: 4px solid #ddd; }
+        .elevation-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #333; }
+        .elevation-actions { display: flex; gap: 10px; }
+        .close-chart-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: #888; }
+        #elevationChart { width: 100% !important; height: 160px !important; }
+
+        .chat-fab { position: absolute; bottom: 40px; right: 20px; z-index: 3000; width: 60px; height: 60px; background: #2e7d32; border-radius: 50%; box-shadow: 0 6px 0 #1e6f2e, 0 10px 10px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; font-size: 26px; transition: transform 0.1s; border: 2px solid #fff; }
+        .chat-fab:active { transform: translateY(6px); box-shadow: 0 0 0 #1e6f2e; }
+        .chat-window { position: absolute; bottom: 110px; right: 20px; width: 300px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 3000; display: none; flex-direction: column; overflow: hidden; border: 1px solid #ddd; }
+        .chat-header { background: #2e7d32; color: white; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .chat-messages { flex: 1; padding: 10px; overflow-y: auto; background: #f9f9f9; font-size: 13px; }
+        .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; max-width: 80%; word-wrap: break-word; }
+        .msg-user { background: #e8f5e9; align-self: flex-end; margin-left: auto; color: #1b5e20; }
+        .msg-ai { background: #fff; border: 1px solid #eee; align-self: flex-start; color: #333; }
+        .chat-input-area { padding: 10px; border-top: 1px solid #eee; display: flex; gap: 5px; background: white; }
+        .chat-input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
+        .chat-send-btn { background: #2e7d32; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .typing-indicator { font-style: italic; color: #888; font-size: 12px; display: none; margin: 5px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 5000; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; border-bottom: 5px solid #ddd; }
+        .modal-close { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #888; }
+        .ai-result-title { font-size: 18px; font-weight: bold; color: #667eea; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;}
+        
+        .settings-group { margin-bottom: 15px; }
+        .settings-label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 13px; color: #555; }
+        .library-list { list-style: none; padding: 0; margin: 0; }
+        .library-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .settings-input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; box-sizing: border-box; }
+        .settings-save-btn { background: #2e7d32; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px;}
+        .radio-group { display: flex; gap: 15px; flex-wrap: wrap; }
+        .color-preview { width: 16px; height: 16px; border-radius: 50%; display: inline-block; border: 1px solid #ddd; vertical-align: middle;}
+
+        @media (max-width: 768px) {
+            .info-box { top: 10px; left: 10px; padding: 8px; max-width: 140px; }
+            .info-box h2 { font-size: 13px; margin: 0; } .info-box p { display: none; }
+            .controls-box { top: 60px; left: 10px; right: auto; justify-content: flex-start; max-width: 95%; gap: 8px; }
+            .control-btn { padding: 8px 10px; font-size: 12px; }
+            .leaflet-top.leaflet-left { top: auto !important; bottom: 20px !important; left: 20px !important; }
+            .leaflet-control-zoom { margin-bottom: 80px; } 
+            .chat-window { width: 90%; right: 5%; bottom: 100px; height: 50vh; }
+            .logo-box { width: 80px; bottom: 20px; left: auto; right: 20px; display: none; }
+            #elevation-container { width: 95%; height: 180px; bottom: 10px; }
+            .compass-container { top: auto; left: auto; bottom: 110px; right: 20px; width: 50px; height: 50px; }
+        }
+    </style>
+    
+    <!-- MANIFEST SCRIPT (Try-Catch wrapper για αποφυγή σφαλμάτων) -->
+    <script>
+        try {
+            const manifest = {
+                "name": "Parnitha Map AI",
+                "short_name": "ParnithaMap",
+                "description": "Διαδραστικός χάρτης Πάρνηθας με AI οδηγό",
+                "start_url": ".",
+                "display": "standalone",
+                "background_color": "#f0f2f5",
+                "theme_color": "#2e7d32",
+                "icons": [{
+                    "src": "https://lh3.googleusercontent.com/a-/ALV-UjUCO8MgQJshwSQ6QbDEBjR4OLVCwN3-3eB3-9L4XwPCvNf2YM4=s265-w265-h265",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }]
+            };
+            const stringManifest = JSON.stringify(manifest);
+            const blob = new Blob([stringManifest], {type: 'application/json'});
+            const manifestURL = URL.createObjectURL(blob);
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = manifestURL;
+            document.head.appendChild(link);
+        } catch(e) {
+            console.log("PWA manifest injection failed, proceeding without it.");
+        }
+    </script>
+</head>
+<body>
+
+    <div class="info-box">
+        <h2>ΕΘΕΛΟΝΤΙΚΗ ΔΡΑΣΗ ΠΑΡΝΗΘΑΣ</h2>
+        <p>Χάρτης δράσης ή Πεζοπορικής Διαδρομής</p>
+    </div>
+
+    <div id="compass" class="compass-container">
+        <div class="compass-face">
+            <div class="compass-mark n">N</div><div class="compass-mark s">S</div><div class="compass-mark e">E</div><div class="compass-mark w">W</div>
+            <div id="compassNeedle" class="compass-needle"></div><div class="compass-center"></div>
+        </div>
+    </div>
+
+    <div class="controls-box" id="mainControls">
+        <button class="control-btn" data-tooltip="Κεντράρισμα" onclick="recenterMap()"><i class="fas fa-home"></i></button>
+        
+        <div class="dropdown-container">
+            <button class="control-btn btn-gps-main" data-tooltip="GPS Επιλογές" onclick="toggleGpsMenu()"><i class="fas fa-satellite-dish"></i> GPS</button>
+            <div id="gpsDropdown" class="dropdown-menu">
+                <button class="dropdown-item" onclick="toggleGPS()"><i class="fas fa-crosshairs"></i> Θέση</button>
+                <button class="dropdown-item" onclick="startRecordingMode()"><i class="fas fa-circle" style="color:red;"></i> Καταγραφή</button>
+            </div>
+        </div>
+
+        <button id="addPointBtn" class="control-btn btn-add-point" data-tooltip="Προσθήκη Σημείου" onclick="toggleAddPointMode()"><i class="fas fa-map-marker-alt"></i></button>
+        <button class="control-btn btn-save-html" data-tooltip="Αποθήκευση Αλλαγών" onclick="downloadUpdatedHtml()"><i class="fas fa-save"></i></button>
+        <button class="control-btn btn-upload" data-tooltip="Φορτώστε GPX" onclick="document.getElementById('file-input').click()"><i class="fas fa-folder-open"></i></button>
+        <button class="control-btn btn-library" data-tooltip="Βιβλιοθήκη" onclick="openLibrary()"><i class="fas fa-book"></i></button>
+
+        <div class="dropdown-container">
+            <button class="control-btn btn-share-main" data-tooltip="Share" onclick="toggleShareMenu()"><i class="fas fa-share-alt"></i> Share</button>
+            <div id="shareDropdown" class="dropdown-menu">
+                <button class="dropdown-item" onclick="createShareLink()"><i class="fas fa-link"></i> Link</button>
+                <button class="dropdown-item" onclick="window.print()"><i class="fas fa-print"></i> PDF/Print</button>
+                <button class="dropdown-item" onclick="saveMapAsImage()"><i class="fas fa-camera"></i> JPG</button>
+            </div>
+        </div>
+
+        <button class="control-btn btn-clear" data-tooltip="Διαγραφή GPX" onclick="clearRoutes()"><i class="fas fa-trash"></i></button>
+        <button class="control-btn btn-email" data-tooltip="Επικοινωνία" onclick="window.location.href='mailto:info@drasiparnithas.gr?subject=Επικοινωνία'"><i class="fas fa-envelope"></i></button>
+        <button class="control-btn btn-settings" data-tooltip="Ρυθμίσεις" onclick="openSettings()"><i class="fas fa-cog"></i></button>
+        
+        <!-- Κουμπί Εγκατάστασης (Εμφανίζεται μόνο αν είναι διαθέσιμο) -->
+        <button id="installBtn" class="control-btn btn-install" onclick="installApp()"><i class="fas fa-download"></i> Install App</button>
+        
+        <input type="file" id="file-input" accept=".gpx" onchange="handleFileSelect(event)">
+    </div>
+
+    <!-- RECORDING DASHBOARD -->
+    <div id="recordingDashboard" class="recording-dashboard">
+        <div style="text-align:center; margin-bottom:10px; color:#c0392b; font-weight:bold;">● ΕΓΓΡΑΦΗ ΔΙΑΔΡΟΜΗΣ</div>
+        <div class="rec-stats">
+            <div class="rec-stat-item"><span id="recTimer" class="rec-val">00:00:00</span><span class="rec-label">Χρονος</span></div>
+            <div class="rec-stat-item"><span id="recDist" class="rec-val">0.00</span><span class="rec-label">Χλμ</span></div>
+            <div class="rec-stat-item"><span id="recAlt" class="rec-val">--</span><span class="rec-label">Υψομετρο</span></div>
+            <div class="rec-stat-item"><span id="recHead" class="rec-val">--°</span><span class="rec-label">Πυξιδα</span></div>
+        </div>
+        <div class="rec-controls">
+            <button id="recPauseBtn" class="rec-btn rec-btn-pause" onclick="togglePauseRecording()"><i class="fas fa-pause"></i> Παυση</button>
+            <button class="rec-btn rec-btn-stop" onclick="stopRecordingMode()"><i class="fas fa-stop"></i> Τελος</button>
+        </div>
+    </div>
+
+    <img src="https://lh3.googleusercontent.com/a-/ALV-UjUCO8MgQJshwSQ6QbDEBjR4OLVCwN3-3eB3-9L4XwPCvNf2YM4=s265-w265-h265" alt="Logo" class="logo-box" onerror="this.style.display='none';">
+
+    <div id="elevation-container">
+        <div class="elevation-header"><div class="elevation-actions"><span>Υψομετρική Καμπύλη</span><button id="ai-btn" class="ai-analyze-btn" onclick="analyzeRouteWithAI()">✨ AI Οδηγός</button></div><button class="close-chart-btn" onclick="closeElevationChart()">×</button></div>
+        <canvas id="elevationChart"></canvas>
+    </div>
+
+    <div class="chat-fab" onclick="toggleChat()"><i class="fas fa-tree"></i></div>
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header"><span>🌲 Οδηγός Πάρνηθας</span><span style="cursor:pointer" onclick="toggleChat()">_</span></div>
+        <div class="chat-messages" id="chatMessages"><div class="message msg-ai">Γεια σας! Είμαι ο ψηφιακός σας δασοφύλακας.</div></div>
+        <div class="typing-indicator" id="typingIndicator">Ο οδηγός πληκτρολογεί...</div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Ρώτα κάτι..." onkeypress="handleEnter(event)">
+            <button class="chat-send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="aiModal" onclick="closeAiModal(event)"><div class="modal-content"><span class="modal-close" onclick="closeAiModal(null)">&times;</span><div class="ai-result-title"><i class="fas fa-robot"></i> Ανάλυση Gemini</div><div id="aiModalContent">Φόρτωση...</div></div></div>
+    <div class="modal-overlay" id="libraryModal" onclick="closeLibraryModal(event)"><div class="modal-content"><span class="modal-close" onclick="closeLibraryModal(null)">&times;</span><div class="ai-result-title"><i class="fas fa-book"></i> Βιβλιοθήκη</div><div id="libraryContent"><div style="margin-bottom:15px; font-size:12px; color:#666;">Cloud: GitHub | Local: Τοπικά</div><ul class="library-list" id="githubList"></ul><ul class="library-list" id="localList" style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;"></ul></div></div></div>
+    <div class="modal-overlay" id="settingsModal" onclick="closeSettingsModal(event)"><div class="modal-content"><span class="modal-close" onclick="closeSettingsModal(null)">&times;</span><div class="ai-result-title"><i class="fas fa-cog"></i> Ρυθμίσεις</div><div class="settings-group"><label class="settings-label">Τύπος Χάρτη:</label><div class="radio-group"><label><input type="radio" name="mapType" value="osm" checked> Κλασικός</label><label><input type="radio" name="mapType" value="satellite"> Δορυφορικός</label><label><input type="radio" name="mapType" value="topo"> Τοπογραφικός</label></div></div><div class="settings-group"><label class="settings-label">Χρώμα Γραμμής:</label><div class="radio-group"><label><input type="radio" name="lineColor" value="blue" checked> <span class="color-preview" style="background:#3388ff;"></span></label><label><input type="radio" name="lineColor" value="red"> <span class="color-preview" style="background:#e74c3c;"></span></label><label><input type="radio" name="lineColor" value="#f1c40f"> <span class="color-preview" style="background:#f1c40f;"></span></label></div></div><div class="settings-group"><label class="settings-label">Πάχος Γραμμής:</label><div class="radio-group"><label><input type="radio" name="lineWeight" value="6" checked> Μεγάλο</label><label><input type="radio" name="lineWeight" value="3"> Λεπτό</label></div></div><div class="settings-group"><label class="settings-label">Φάκελος Αποθήκευσης (Όνομα):</label><input type="text" id="folderNameInput" class="settings-input" placeholder="π.χ. Πεζοπορίες ΕΔΠΑ"><div class="settings-help" style="margin-top:2px; font-size:10px; color:#666;">* Το όνομα αυτό θα μπει στην αρχή των αρχείων GPX που κατεβάζετε.</div></div><hr style="margin:15px 0; border:0; border-top:1px solid #eee;"><div class="settings-group"><label class="settings-label">Google API Key:</label><input type="password" id="apiKeyInput" class="settings-input" placeholder="Κλειδί (προαιρετικό)..."></div><button class="settings-save-btn" onclick="saveSettings()">Αποθήκευση</button></div></div>
+    <div class="modal-overlay" id="addPointModal" onclick="closeAddPointModal(event)"><div class="modal-content"><span class="modal-close" onclick="closeAddPointModal(null)">&times;</span><div class="ai-result-title"><i class="fas fa-map-marker-alt"></i> Προσθήκη Σημείου</div><div class="settings-group"><label class="settings-label">Τίτλος:</label><input type="text" id="pointTitle" class="settings-input" placeholder="Π.χ. Πηγή Κεραμίδι"></div><div class="settings-group"><label class="settings-label">Περιγραφή:</label><textarea id="pointDesc" class="settings-input" rows="3" placeholder="Π.χ. Πόσιμο νερό, στάση..."></textarea></div><div class="settings-group"><label class="settings-label">Τύπος:</label><select id="pointType" class="settings-input"><option value="general">Γενικό</option><option value="refuge">Καταφύγιο</option><option value="sight">Αξιοθέατο</option><option value="water">Νερό/Πηγή</option><option value="danger">Κίνδυνος</option></select></div><button class="settings-save-btn" onclick="confirmAddPoint()">Προσθήκη στο Χάρτη</button></div></div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <script>
+        const GLOBAL_API_KEY = "AIzaSyASDnF3E2gmAvv8WY96wg3m3ZkpAntDUU4"; 
+        const STORAGE_KEY = 'parnitha_saved_routes';
+        const SETTINGS_KEY = 'parnitha_settings';
+        const GITHUB_USER = 'EDPAdraseis';
+        const GITHUB_REPO = 'map';
+        var permanentMarkers = [];
+
+        const layers = {
+            osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }),
+            satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri' }),
+            topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'Map data: © OpenStreetMap, SRTM | Map style: © OpenTopoMap (CC-BY-SA)' })
+        };
+
+        const map = L.map('map', { zoomControl: false }).setView([38.168, 23.722], 14);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        layers.osm.addTo(map);
+        let currentLayer = layers.osm;
+
+        const gpxLayerGroup = L.layerGroup().addTo(map);
+        const markersLayerGroup = L.layerGroup().addTo(map);
+        const gpsLayerGroup = L.layerGroup().addTo(map);
+        const recordLayerGroup = L.layerGroup().addTo(map);
+
+        let elevationChart = null;
+        let currentRouteData = null;
+        let isAddingPoint = false;
+        let tempLatLng = null;
+        let isGpsActive = false;
+        let firstLocationFound = false;
+
+        let isRecording = false;
+        let isPaused = false;
+        let recordedPath = [];
+        let recordingPolyline = null;
+        let recStartTime = 0;
+        let recPausedTime = 0;
+        let recTimerInterval = null;
+        let totalDistance = 0;
+        let lastPoint = null;
+        
+        // PWA INSTALL PROMPT LOGIC
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBtn').style.display = 'inline-flex'; // Show install button
+        });
+        
+        async function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('installBtn').style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        }
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const gpxUrl = urlParams.get('gpx');
+            if (gpxUrl) loadGpxFromUrl(gpxUrl);
+            loadPermanentMarkers();
+            const settings = getSettings();
+            updateMapLayer(settings.mapType);
+            if (window.DeviceOrientationEvent) {
+                // iOS require permission request for orientation
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    // Listener will be added after permission
+                } else {
+                    window.addEventListener('deviceorientation', handleOrientation, true);
+                }
+            }
+        };
+
+        function handleOrientation(event) {
+            let heading = null;
+            if (event.webkitCompassHeading) heading = event.webkitCompassHeading;
+            else if (event.alpha) heading = 360 - event.alpha;
+            if (heading !== null) document.getElementById('compassNeedle').style.transform = `translate(-50%, -50%) rotate(${-heading}deg)`;
+        }
+
+        // Request iOS Permission for Compass
+        function requestOrientationPermission() {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation, true);
+                        }
+                    })
+                    .catch(console.error);
+            }
+        }
+
+        function recenterMap() { map.setView([38.168, 23.722], 14); }
+        function toggleShareMenu() { closeAllMenus(); document.getElementById('shareDropdown').classList.add('show'); }
+        function toggleGpsMenu() { closeAllMenus(); document.getElementById('gpsDropdown').classList.add('show'); }
+        function closeAllMenus() { document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('show')); }
+        window.onclick = function(event) { if (!event.target.closest('.dropdown-container')) closeAllMenus(); }
+
+        function toggleGPS() {
+            closeAllMenus();
+            if (isRecording) return;
+            const btn = document.querySelector('.btn-gps-main');
+            if (isGpsActive) {
+                map.stopLocate(); gpsLayerGroup.clearLayers(); isGpsActive = false; firstLocationFound = false;
+                btn.classList.remove('active'); btn.classList.remove('searching'); btn.innerHTML = '<i class="fas fa-satellite-dish"></i> GPS';
+            } else {
+                // Request compass permission on iOS
+                requestOrientationPermission();
+                // High accuracy but allow cached data for speed
+                map.locate({watch: true, enableHighAccuracy: true, timeout: 30000, maximumAge: 10000});
+                isGpsActive = true; btn.classList.add('searching'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Αναζήτηση...';
+            }
+        }
+
+        function startRecordingMode() {
+            closeAllMenus();
+            if (isGpsActive) { map.stopLocate(); isGpsActive = false; } 
+            isRecording = true; isPaused = false; recordedPath = []; totalDistance = 0; lastPoint = null;
+            recordLayerGroup.clearLayers(); gpsLayerGroup.clearLayers(); recordingPolyline = null;
+            document.getElementById('mainControls').style.display = 'none';
+            document.getElementById('recordingDashboard').style.display = 'flex';
+            document.querySelector('.chat-fab').style.display = 'none';
+            recStartTime = Date.now(); recPausedTime = 0; updateTimerDisplay();
+            recTimerInterval = setInterval(updateTimerDisplay, 1000);
+            requestOrientationPermission(); // iOS Compass
+            map.locate({watch: true, enableHighAccuracy: true, timeout: 30000, maximumAge: 10000});
+        }
+        function stopRecordingMode() {
+            const settings = getSettings(); const folder = settings.folderName || "Διαδρομές";
+            if (confirm("Θέλετε να αποθηκευτεί η διαδρομή σαν GPX στον φάκελο '" + folder + "';")) {
+                clearInterval(recTimerInterval); map.stopLocate(); isRecording = false;
+                document.getElementById('recordingDashboard').style.display = 'none';
+                document.getElementById('mainControls').style.display = 'flex';
+                document.querySelector('.chat-fab').style.display = 'flex';
+                downloadRecordedGpx(); gpsLayerGroup.clearLayers();
+                const btn = document.querySelector('.btn-gps-main');
+                btn.classList.remove('active'); btn.classList.remove('searching'); btn.innerHTML = '<i class="fas fa-satellite-dish"></i> GPS';
+            }
+        }
+        function togglePauseRecording() {
+            isPaused = !isPaused; const btn = document.getElementById('recPauseBtn');
+            if (isPaused) { btn.innerHTML = '<i class="fas fa-play"></i> Συνεχεια'; btn.classList.add('resume'); }
+            else { btn.innerHTML = '<i class="fas fa-pause"></i> Παυση'; btn.classList.remove('resume'); recStartTime = Date.now() - lastTimerTime; }
+        }
+        let lastTimerTime = 0;
+        function updateTimerDisplay() {
+            if (isPaused) return;
+            const now = Date.now(); const diff = now - recStartTime; lastTimerTime = diff;
+            const hrs = Math.floor(diff/3600000), mins = Math.floor((diff%3600000)/60000), secs = Math.floor((diff%60000)/1000);
+            document.getElementById('recTimer').innerText = `${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+        }
+        map.on('locationfound', function(e) {
+            const btn = document.querySelector('.btn-gps-main');
+            if (btn && btn.innerHTML.includes('Αναζήτηση')) { btn.classList.remove('searching'); btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-satellite-dish"></i> ON'; }
+            gpsLayerGroup.clearLayers();
+            const heading = e.heading || 0;
+            const gpsIcon = L.divIcon({ className: 'gps-user-icon', html: `<div style="position:relative;width:24px;height:24px;"><div class="gps-arrow" style="transform:rotate(${heading}deg);"></div><div class="gps-dot"></div></div>`, iconSize: [24, 24], iconAnchor: [12, 12] });
+            const marker = L.marker(e.latlng, {icon: gpsIcon}).addTo(gpsLayerGroup);
+            if (!isRecording) { marker.bindPopup("Εσείς!"); if (!firstLocationFound) { map.setView(e.latlng, 16); marker.openPopup(); firstLocationFound = true; } } else { map.setView(e.latlng); }
+            if (isRecording && !isPaused) {
+                if (e.altitude !== null) document.getElementById('recAlt').innerText = Math.round(e.altitude) + "m";
+                if (e.heading !== null && !isNaN(e.heading)) document.getElementById('recHead').innerText = Math.round(e.heading) + "°";
+                if (lastPoint) {
+                    const d = map.distance(lastPoint, e.latlng);
+                    if (d > 5) { totalDistance += d; document.getElementById('recDist').innerText = (totalDistance/1000).toFixed(2); recordedPath.push(e.latlng); if (recordingPolyline) recordingPolyline.setLatLngs(recordedPath); else recordingPolyline = L.polyline(recordedPath, {color:'red', weight:5}).addTo(recordLayerGroup); lastPoint = e.latlng; }
+                } else { lastPoint = e.latlng; recordedPath.push(e.latlng); }
+            }
+        });
+        map.on('locationerror', function(e) { 
+            let msg = "Δεν βρέθηκε τοποθεσία.";
+            if(e.code === 1) msg = "Δεν δώσατε άδεια για το GPS.";
+            else if(e.code === 2) msg = "Αδύνατο σήμα GPS.";
+            else if(e.code === 3) msg = "Το GPS άργησε να ανταποκριθεί.";
+            alert(msg); 
+            if(isRecording) stopRecordingMode(); 
+            else { 
+                if(isGpsActive) { 
+                    isGpsActive=false; map.stopLocate(); 
+                    const btn=document.querySelector('.btn-gps-main'); 
+                    if(btn){btn.classList.remove('active');btn.classList.remove('searching');btn.innerHTML='<i class="fas fa-satellite-dish"></i> GPS';} 
+                } 
+            } 
+        });
+        function downloadRecordedGpx() {
+            if (recordedPath.length < 2) { alert("Short path."); return; }
+            const s = getSettings(); const f = s.folderName ? s.folderName.replace(/[^a-z0-9α-ωΑ-Ω]/gi, '_') : 'Route';
+            const d = new Date().toISOString().slice(0,10); let gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="ParnithaMap"><trk><name>${f} - ${d}</name><trkseg>`;
+            recordedPath.forEach(pt => { gpx += `\n<trkpt lat="${pt.lat}" lon="${pt.lng}"></trkpt>`; }); gpx += `\n</trkseg></trk></gpx>`;
+            const b = new Blob([gpx], {type: 'application/gpx+xml'}); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `${f}_${d}.gpx`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+        function updateMapLayer(t) { map.removeLayer(currentLayer); if(t==='satellite')currentLayer=layers.satellite; else if(t==='topo')currentLayer=layers.topo; else currentLayer=layers.osm; currentLayer.addTo(map); }
+        function loadPermanentMarkers() { markersLayerGroup.clearLayers(); permanentMarkers.forEach((p, i) => { addMarkerToMap(p.lat, p.lng, p.title, p.desc, p.type, i); }); }
+        function addMarkerToMap(lat, lng, title, desc, type, index) {
+            let color='#3388ff', icon='fa-map-marker-alt';
+            if(type==='refuge'){color='#e74c3c';icon='fa-home';} else if(type==='sight'){color='#27ae60';icon='fa-camera';} else if(type==='water'){color='#3498db';icon='fa-tint';} else if(type==='danger'){color='#c0392b';icon='fa-exclamation-triangle';}
+            const iC = L.divIcon({ className:'custom-div-icon', html:`<div style="background-color:${color};width:30px;height:30px;border-radius:50%;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;"><i class="fas ${icon}"></i></div>`, iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-30] });
+            const m = L.marker([lat, lng], {icon: iC}).addTo(markersLayerGroup);
+            m.bindPopup(`<span class="popup-title">${title}</span><span class="popup-desc">${desc}</span><button class="delete-marker-btn" onclick="deletePermanentMarker(${index})">Διαγραφή</button>`, { className: 'custom-popup' });
+        }
+        function toggleAddPointMode() { isAddingPoint = !isAddingPoint; const b = document.getElementById('addPointBtn'); const m = document.getElementById('map'); if (isAddingPoint) { b.classList.add('active'); m.classList.add('adding-point'); alert("Κλικ στο χάρτη."); } else { b.classList.remove('active'); m.classList.remove('adding-point'); } }
+        map.on('click', function(e) { if (isAddingPoint) { tempLatLng = e.latlng; document.getElementById('addPointModal').style.display = 'flex'; document.getElementById('pointTitle').value = ''; document.getElementById('pointDesc').value = ''; toggleAddPointMode(); } });
+        function confirmAddPoint() { const t = document.getElementById('pointTitle').value; const d = document.getElementById('pointDesc').value; const y = document.getElementById('pointType').value; if (t && tempLatLng) { permanentMarkers.push({ lat: tempLatLng.lat, lng: tempLatLng.lng, title: t, desc: d, type: y }); loadPermanentMarkers(); closeAddPointModal(null); } }
+        function closeAddPointModal(e) { if (!e || e.target.id === 'addPointModal' || e.target.classList.contains('modal-close')) document.getElementById('addPointModal').style.display = 'none'; }
+        window.deletePermanentMarker = function(i) { if (confirm("Διαγραφή;")) { permanentMarkers.splice(i, 1); loadPermanentMarkers(); } };
+        function downloadUpdatedHtml() { let h = document.documentElement.outerHTML; const m = JSON.stringify(permanentMarkers, null, 4); const r = /var permanentMarkers = \[[\s\S]*?\];/; const n = `var permanentMarkers = ${m};`; if (h.match(r)) { h = h.replace(r, n); const b = new Blob(["<!DOCTYPE html>\n"+h], {type:'text/html'}); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'index.html'; document.body.appendChild(a); a.click(); document.body.removeChild(a); alert("Upload to GitHub."); } }
+        function getSettings() { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { color:'#3388ff', weight:6, mapType:'osm', folderName:'Πεζοπορίες ΕΔΠΑ' }; } catch(e) { return { color:'#3388ff', weight:6, mapType:'osm', folderName:'Πεζοπορίες ΕΔΠΑ' }; } }
+        function saveSettings() {
+            const k = document.getElementById('apiKeyInput').value.trim(); const f = document.getElementById('folderNameInput').value.trim(); if (k) localStorage.setItem('gemini_api_key', k);
+            const c = document.querySelector('input[name="lineColor"]:checked').value; const w = document.querySelector('input[name="lineWeight"]:checked').value; const m = document.querySelector('input[name="mapType"]:checked').value;
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify({ color: c==='blue'?'#3388ff':(c==='red'?'#e74c3c':'#f1c40f'), weight: parseInt(w), mapType: m, folderName: f || "Πεζοπορίες ΕΔΠΑ" }));
+            updateMapLayer(m); alert("OK!"); closeSettingsModal(null);
+        }
+        function openSettings() {
+            const s = getSettings();
+            const cMap = {'#e74c3c':'red', '#f1c40f':'#f1c40f', '#3388ff':'blue'};
+            const cVal = Object.keys(cMap).find(k => k === s.color) ? cMap[s.color] : 'blue';
+            document.querySelector(`input[name="lineColor"][value="${cVal}"]`).checked=true;
+            document.querySelector(`input[name="lineWeight"][value="${s.weight}"]`).checked=true;
+            document.querySelector(`input[name="mapType"][value="${s.mapType||'osm'}"]`).checked=true;
+            document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || "";
+            document.getElementById('folderNameInput').value = s.folderName || "Πεζοπορίες ΕΔΠΑ";
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+        function closeSettingsModal(e) { if (!e || e.target.id === 'settingsModal' || e.target.classList.contains('modal-close')) document.getElementById('settingsModal').style.display = 'none'; }
+        function handleFileSelect(event) { const f = event.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = function(e) { saveRouteToStorage(f.name, e.target.result); loadGpxFromUrl(URL.createObjectURL(new Blob([e.target.result], {type: 'text/xml'}))); }; r.readAsText(f); event.target.value = ''; }
+        function loadGpxFromUrl(url) { gpxLayerGroup.clearLayers(); closeElevationChart(); currentRouteData=null; document.getElementById('ai-btn').style.display='none'; const s = getSettings(); new L.GPX(url, { async: true, marker_options: { startIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-start.png', endIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-end.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-shadow.png' }, polyline_options: { color: s.color, opacity: 0.8, weight: s.weight, lineCap: 'round' } }).on('loaded', function(e) { map.fitBounds(e.target.getBounds()); currentRouteData = { dist: (e.target.get_distance()/1000).toFixed(2), gain: e.target.get_elevation_gain().toFixed(0), maxEle: e.target.get_elevation_max().toFixed(0) }; if (e.target.get_elevation_data().length > 0) { drawElevationChart(e.target.get_elevation_data()); document.getElementById('ai-btn').style.display='block'; } }).addTo(gpxLayerGroup); }
+        function saveMapAsImage() { const c=document.querySelector('.controls-box'), f=document.querySelector('.chat-fab'), i=document.querySelector('.info-box'), p=document.getElementById('compass'); c.style.display='none'; f.style.display='none'; i.style.display='none'; p.style.display='none'; html2canvas(document.body, { useCORS: true, allowTaint: true, scrollY: -window.scrollY }).then(canvas => { c.style.display='flex'; f.style.display='flex'; i.style.display='block'; p.style.display='flex'; const l=document.createElement('a'); l.download='map.jpg'; l.href=canvas.toDataURL('image/jpeg',0.9); l.click(); }).catch(e=>{ c.style.display='flex'; f.style.display='flex'; i.style.display='block'; p.style.display='flex'; alert("Error."); }); }
+        function getApiKey() { return (GLOBAL_API_KEY && GLOBAL_API_KEY.length > 5) ? GLOBAL_API_KEY : (localStorage.getItem('gemini_api_key') || ""); }
+        async function callGemini(p) { const k = getApiKey(); if(!k) return "⚠️ Missing Key"; try { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${k}`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({contents:[{parts:[{text:p}]}]})}); if(!r.ok) throw new Error(); const d=await r.json(); return d.candidates?.[0]?.content?.parts?.[0]?.text||"Error"; } catch(e){return "Connection Error";} }
+        async function fetchGitHubFiles() { const l = document.getElementById('githubList'); l.innerHTML='Loading...'; try { const r = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/`); const d=await r.json(); l.innerHTML=''; d.filter(i=>i.name.endsWith('.gpx')).forEach(f=>{ l.innerHTML+=`<li class="library-item" onclick="loadAndCloseLibrary('${f.download_url}')"><span class="library-name"><i class="fas fa-cloud" style="color:#3498db; margin-right:5px;"></i> ${f.name}</span></li>`; }); if(!l.innerHTML) l.innerHTML='<li class="empty-library">Empty.</li>'; } catch(e){l.innerHTML='Error loading GitHub.';} }
+        function saveRouteToStorage(n,d){ try{let r=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); if(!r.some(x=>x.name===n)){r.push({name:n,data:d});localStorage.setItem(STORAGE_KEY,JSON.stringify(r));}}catch(e){}}
+        function renderLocalLibrary(){ const l=document.getElementById('localList'); l.innerHTML=''; const r=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); if(r.length===0) l.innerHTML='<li class="empty-library">Empty.</li>'; else r.forEach(x=>{ const u=URL.createObjectURL(new Blob([x.data],{type:'application/gpx+xml'})); l.innerHTML+=`<li class="library-item"><span class="library-name" onclick="loadAndCloseLibrary('${u}')"><i class="fas fa-file-code" style="color:#f39c12; margin-right:5px;"></i> ${x.name}</span><i class="fas fa-trash library-delete" onclick="let rr=JSON.parse(localStorage.getItem('${STORAGE_KEY}')||'[]'); rr=rr.filter(z=>z.name!=='${x.name}'); localStorage.setItem('${STORAGE_KEY}',JSON.stringify(rr)); renderLocalLibrary();"></i></li>`; }); }
+        function openLibrary(){ document.getElementById('libraryModal').style.display='flex'; fetchGitHubFiles(); renderLocalLibrary(); }
+        function closeLibraryModal(e){ if(!e||e.target.id==='libraryModal'||e.target.classList.contains('modal-close')) document.getElementById('libraryModal').style.display='none'; }
+        function loadAndCloseLibrary(u){ loadGpxFromUrl(u); document.getElementById('libraryModal').style.display='none'; }
+        function createShareLink(){ const u=prompt("Link GPX:"); if(u) {const s=`${window.location.href.split('?')[0]}?gpx=${encodeURIComponent(u)}`; navigator.clipboard.writeText(s).then(()=>alert("Copied!"),()=>prompt("Link:",s));}}
+        async function analyzeRouteWithAI(){ if(!currentRouteData)return; document.getElementById('aiModal').style.display='flex'; document.getElementById('aiModalContent').innerHTML='Loading...'; const r=await callGemini(`Ανάλυσε: ${currentRouteData.dist}km, +${currentRouteData.gain}m gain.`); document.getElementById('aiModalContent').innerHTML=r.replace(/\*\*/g,'<b>').replace(/\n/g,'<br>'); }
+        function closeAiModal(e){ if(!e||e.target.id==='aiModal'||e.target.classList.contains('modal-close')) document.getElementById('aiModal').style.display='none'; }
+        function toggleChat(){ const w=document.getElementById('chatWindow'); w.style.display=w.style.display==='flex'?'none':'flex'; }
+        function handleEnter(e){ if(e.key==='Enter') sendMessage(); }
+        async function sendMessage(){ const i=document.getElementById('chatInput'); const m=i.value.trim(); if(!m)return; addMessage(m,'msg-user'); i.value=''; const r=await callGemini(`User: ${m}. Reply as Ranger.`); addMessage(r,'msg-ai'); }
+        function addMessage(t,c){ const d=document.createElement('div'); d.className=`message ${c}`; d.innerText=t; document.getElementById('chatMessages').appendChild(d); }
+        function clearRoutes(){ gpxLayerGroup.clearLayers(); closeElevationChart(); currentRouteData=null; map.setView([38.168, 23.722], 14); }
+        function drawElevationChart(d){ const c=document.getElementById('elevationChart').getContext('2d'); document.getElementById('elevation-container').style.display='flex'; if(elevationChart)elevationChart.destroy(); const l=[],v=[]; const r=Math.ceil(d.length/500); for(let i=0;i<d.length;i+=r){l.push(d[i][0].toFixed(1));v.push(d[i][1]);} elevationChart=new Chart(c,{type:'line',data:{labels:l,datasets:[{data:v,borderColor:'#2e7d32',backgroundColor:'rgba(46,125,50,0.1)',fill:true,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:true},y:{display:true}}}}); }
+        function closeElevationChart(){ document.getElementById('elevation-container').style.display='none'; if(elevationChart)elevationChart.destroy(); }
+    </script>
+</body>
+</html>
