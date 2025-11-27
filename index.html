@@ -2,15 +2,14 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Χάρτης Πάρνηθας - AI Edition</title>
     
-    <!-- PWA SETTINGS -->
+    <!-- PWA SETTINGS (Παραμένουν ως meta tags μόνο) -->
     <meta name="theme-color" content="#2e7d32">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Parnitha Map">
-    <meta name="mobile-web-app-capable" content="yes">
     
     <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/a-/ALV-UjUCO8MgQJshwSQ6QbDEBjR4OLVCwN3-3eB3-9L4XwPCvNf2YM4=s265-w265-h265">
     <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/a-/ALV-UjUCO8MgQJshwSQ6QbDEBjR4OLVCwN3-3eB3-9L4XwPCvNf2YM4=s265-w265-h265">
@@ -24,24 +23,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* FIX ΓΙΑ ΛΕΥΚΗ ΟΘΟΝΗ ΣΕ ΚΙΝΗΤΑ: Χρήση 100% αντί για vh */
-        html, body { 
-            height: 100%; 
-            width: 100%; 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Roboto', sans-serif; 
-            background-color: #f0f2f5; 
-            overflow: hidden; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-        #map { 
-            width: 100%; 
-            height: 100%; 
-            z-index: 1; 
-            cursor: grab; 
-            background: #e5e5e5; /* Γκρι φόντο για να φαίνεται ότι φορτώνει */
-        }
+        /* Επαναφορά στο σταθερό 100vh που δούλευε */
+        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background-color: #f0f2f5; overflow: hidden; }
+        #map { width: 100%; height: 100vh; z-index: 1; cursor: grab; }
         #map.adding-point { cursor: crosshair; }
 
         /* --- COMPASS STYLE --- */
@@ -277,35 +261,4 @@
         <div style="text-align:center; margin-bottom:10px; color:#c0392b; font-weight:bold;">● ΕΓΓΡΑΦΗ ΔΙΑΔΡΟΜΗΣ</div>
         <div class="rec-stats">
             <div class="rec-stat-item"><span id="recTimer" class="rec-val">00:00:00</span><span class="rec-label">Χρονος</span></div>
-            <div class="rec-stat-item"><span id="recDist" class="rec-val">0.00</span><span class="rec-label">Χλμ</span></div>
-            <div class="rec-stat-item"><span id="recAlt" class="rec-val">--</span><span class="rec-label">Υψομετρο</span></div>
-            <div class="rec-stat-item"><span id="recHead" class="rec-val">--°</span><span class="rec-label">Πυξιδα</span></div>
-        </div>
-        <div class="rec-controls">
-            <button id="recPauseBtn" class="rec-btn rec-btn-pause" onclick="togglePauseRecording()"><i class="fas fa-pause"></i> Παυση</button>
-            <button class="rec-btn rec-btn-stop" onclick="stopRecordingMode()"><i class="fas fa-stop"></i> Τελος</button>
-        </div>
-    </div>
-
-    <img src="https://lh3.googleusercontent.com/a-/ALV-UjUCO8MgQJshwSQ6QbDEBjR4OLVCwN3-3eB3-9L4XwPCvNf2YM4=s265-w265-h265" alt="Logo" class="logo-box" onerror="this.style.display='none';">
-
-    <div id="elevation-container">
-        <div class="elevation-header"><div class="elevation-actions"><span>Υψομετρική Καμπύλη</span><button id="ai-btn" class="ai-analyze-btn" onclick="analyzeRouteWithAI()">✨ AI Οδηγός</button></div><button class="close-chart-btn" onclick="closeElevationChart()">×</button></div>
-        <canvas id="elevationChart"></canvas>
-    </div>
-
-    <div class="chat-fab" onclick="toggleChat()"><i class="fas fa-tree"></i></div>
-    <div class="chat-window" id="chatWindow">
-        <div class="chat-header"><span>🌲 Οδηγός Πάρνηθας</span><span style="cursor:pointer" onclick="toggleChat()">_</span></div>
-        <div class="chat-messages" id="chatMessages"><div class="message msg-ai">Γεια σας! Είμαι ο ψηφιακός σας δασοφύλακας.</div></div>
-        <div class="typing-indicator" id="typingIndicator">Ο οδηγός πληκτρολογεί...</div>
-        <div class="chat-input-area">
-            <input type="text" id="chatInput" class="chat-input" placeholder="Ρώτα κάτι..." onkeypress="handleEnter(event)">
-            <button class="chat-send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
-
-    <!-- Modals -->
-    <div class="modal-overlay" id="aiModal" onclick="closeAiModal(event)"><div class="modal-content"><span class="modal-close" onclick="closeAiModal(null)">&times;</span><div class="ai-result-title"><i class="fas fa-robot"></i> Ανάλυση Gemini</div><div id="aiModalContent">Φόρτωση...</div></div></div>
-    <div class="modal-overlay" id="libraryModal" onclick="closeLibraryModal(event)"><div class="modal-content"><span class="modal-close" onclick="closeLibraryModal(null)">&times;</span><div class="ai-result-title"><i class="fas fa-book"></i> Βιβλιοθήκη</div><div id="libraryContent"><div style="margin-bottom:15px; font-size:12px; color:#666;">Cloud: GitHub | Local: Τοπικά</div><ul class="library-list" id="githubList"></ul><ul class="library-list" id="localList" style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;"></ul></div></div></div>
-    <div class="modal-overlay" id="settingsModal" onclick="closeSettingsModal(event)"><div class="modal-content"><span class="modal-close" onclick="closeSettingsModal(null)">&times;</span><div class="ai-result-title"><i class="fas fa-cog"></i> Ρυθμίσεις</div><div class="settings-group"><label class="settings-label">Τύπος Χάρτη:</label><div class="radio-group"><label><input type="radio" name="mapType" value="osm" checked> Κλασικός</label><label><input type="radio" name="mapType" value="satellite"> Δορυφορικός</label><label><input type="radio" name="mapType" value="topo"> Τοπογραφικός</label></div></div><div class="settings-group"><label class="settings-label">Χρώμα Γραμμής:</label><div class="radio-group"><label><input type="radio" name="lineColor" value="blue" checked> <span class="color-preview" style="background:#3388ff;"></span></label><label><input type="radio" name="lineColor" value="red"> <span class="color-preview" style="background:#e74c3c;"></span></label>
+            <div class="rec-stat-item"><span id="recDist"
