@@ -32,11 +32,14 @@
         /* Χρώματα Κουμπιών */
         .control-btn { background: #ffffff; color: #333; border: 1px solid #e0e0e0; border-bottom-color: #bdc3c7; }
         
-        /* GPS Button - Ειδικό Στυλ */
         .btn-gps { background: #3498db; color: white; border-color: #2980b9; border-bottom-color: #1f6391; box-shadow: 0 4px 0 #1f6391; }
         .btn-gps.active { background: #2ecc71; border-color: #27ae60; border-bottom-color: #1e8449; box-shadow: 0 4px 0 #1e8449; animation: pulse 2s infinite; }
         
+        .btn-record { background: #e74c3c; color: white; border-color: #c0392b; border-bottom-color: #922b21; box-shadow: 0 4px 0 #922b21; }
+        .btn-record.recording { background: #c0392b; animation: pulse-red 1.5s infinite; border-bottom-color: #641e16; }
+
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); } 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
         .btn-add-point { background: #e67e22; color: white; border-color: #d35400; border-bottom-color: #a04000; box-shadow: 0 4px 0 #a04000; }
         .btn-add-point.active { background: #c0392b; border-color: #922b21; box-shadow: 0 4px 0 #641e16; }
@@ -73,7 +76,7 @@
         /* Controls Box */
         .controls-box { 
             position: absolute; top: 20px; right: 20px; z-index: 1000; 
-            display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; 
+            display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; 
             max-width: 65%; pointer-events: none; 
         }
         .controls-box > * { pointer-events: auto; }
@@ -136,25 +139,12 @@
             .info-box { top: 10px; left: 10px; padding: 8px; max-width: 140px; }
             .info-box h2 { font-size: 13px; margin: 0; }
             .info-box p { display: none; }
-            
-            /* Κουμπιά κάτω από το Info Box */
-            .controls-box {
-                top: 60px; /* Χαμηλότερα */
-                left: 10px; /* Αριστερά στοίχιση */
-                right: auto;
-                justify-content: flex-start;
-                max-width: 95%;
-                gap: 8px;
-            }
-            
+            .controls-box { top: 60px; left: 10px; right: auto; justify-content: flex-start; max-width: 95%; gap: 8px; }
             .control-btn { padding: 8px 10px; font-size: 12px; }
-            
-            /* Απομάκρυνση Zoom Controls */
             .leaflet-top.leaflet-left { top: auto !important; bottom: 20px !important; left: 20px !important; }
-            .leaflet-control-zoom { margin-bottom: 80px; } /* Για να μην πέφτει πάνω στο Chat */
-            
+            .leaflet-control-zoom { margin-bottom: 80px; } 
             .chat-window { width: 90%; right: 5%; bottom: 100px; height: 50vh; }
-            .logo-box { width: 80px; bottom: 20px; left: auto; right: 20px; display: none; } /* Κρύβουμε το logo στα πολύ μικρά αν ενοχλεί */
+            .logo-box { width: 80px; bottom: 20px; left: auto; right: 20px; display: none; }
             #elevation-container { width: 95%; height: 180px; bottom: 10px; }
         }
     </style>
@@ -167,9 +157,19 @@
     </div>
 
     <div class="controls-box">
+        <!-- Κουμπί Recenter (ΝΕΟ) -->
+        <button class="control-btn" data-tooltip="Κεντράρισμα στην Πάρνηθα" onclick="recenterMap()">
+            <i class="fas fa-home"></i>
+        </button>
+
         <!-- GPS Tracking -->
         <button id="gpsBtn" class="control-btn btn-gps" data-tooltip="Τοποθεσία" onclick="toggleGPS()">
             <i class="fas fa-crosshairs"></i>
+        </button>
+
+        <!-- Κουμπί Καταγραφής (ΝΕΟ) -->
+        <button id="recordBtn" class="control-btn btn-record" data-tooltip="Καταγραφή Διαδρομής" onclick="toggleRecording()">
+            <i class="fas fa-circle"></i> Καταγραφή
         </button>
 
         <button id="addPointBtn" class="control-btn btn-add-point" data-tooltip="Προσθήκη Σημείου" onclick="toggleAddPointMode()">
@@ -349,7 +349,7 @@
 
         const map = L.map('map', { zoomControl: false }).setView([38.168, 23.722], 14);
         
-        // ΜΕΤΑΚΙΝΗΣΗ ZOOM CONTROLS ΚΑΤΩ ΔΕΞΙΑ (Για να μην ενοχλούν στα κινητά)
+        // ΜΕΤΑΚΙΝΗΣΗ ZOOM CONTROLS ΚΑΤΩ ΔΕΞΙΑ
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         
         layers.osm.addTo(map);
@@ -358,12 +358,19 @@
         const gpxLayerGroup = L.layerGroup().addTo(map);
         const markersLayerGroup = L.layerGroup().addTo(map);
         const gpsLayerGroup = L.layerGroup().addTo(map);
+        const recordLayerGroup = L.layerGroup().addTo(map); // Layer για την καταγραφή
 
         let elevationChart = null;
         let currentRouteData = null;
         let isAddingPoint = false;
         let tempLatLng = null;
         let isGpsActive = false;
+        let firstLocationFound = false;
+
+        // --- RECORDING VARS ---
+        let isRecording = false;
+        let recordedPath = [];
+        let recordingPolyline = null;
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -373,6 +380,11 @@
             const settings = getSettings();
             updateMapLayer(settings.mapType);
         };
+
+        // --- RECENTER MAP ---
+        function recenterMap() {
+            map.setView([38.168, 23.722], 14);
+        }
 
         // --- SHARE MENU ---
         function toggleShareMenu() {
@@ -393,21 +405,107 @@
         // --- GPS ---
         function toggleGPS() {
             const btn = document.getElementById('gpsBtn');
-            if (isGpsActive) {
+            if (isGpsActive && !isRecording) { // Δεν κλείνουμε το GPS αν καταγράφουμε
                 map.stopLocate(); gpsLayerGroup.clearLayers(); isGpsActive = false; btn.classList.remove('active');
+                firstLocationFound = false;
             } else {
-                map.locate({setView: true, watch: true, maxZoom: 16, enableHighAccuracy: true});
+                map.locate({watch: true, enableHighAccuracy: true});
                 isGpsActive = true; btn.classList.add('active');
             }
         }
         map.on('locationfound', function(e) {
             gpsLayerGroup.clearLayers();
             const radius = e.accuracy / 2;
+            
+            if (!firstLocationFound) {
+                map.setView(e.latlng, 16);
+                firstLocationFound = true;
+            }
+
             L.circle(e.latlng, { radius: radius, color: '#2980b9', weight: 1, fillOpacity: 0.1 }).addTo(gpsLayerGroup);
-            const gpsIcon = L.divIcon({ className: 'gps-icon', html: '<div style="width: 15px; height: 15px; background: #2980b9; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>', iconSize: [15, 15] });
+            
+            const gpsIcon = L.divIcon({
+                className: 'gps-icon',
+                html: '<div style="font-size: 24px; color: #d35400; text-shadow: 2px 2px 2px white;"><i class="fas fa-hiking"></i></div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 24]
+            });
             L.marker(e.latlng, {icon: gpsIcon}).addTo(gpsLayerGroup).bindPopup("Εσείς!").openPopup();
+
+            // --- RECORDING LOGIC INSIDE GPS UPDATE ---
+            if (isRecording) {
+                recordedPath.push(e.latlng);
+                
+                // Draw Line
+                if (recordingPolyline) {
+                    recordingPolyline.setLatLngs(recordedPath);
+                } else {
+                    recordingPolyline = L.polyline(recordedPath, {color: 'red', weight: 5}).addTo(recordLayerGroup);
+                }
+            }
         });
-        map.on('locationerror', function(e) { alert("Απαιτείται πρόσβαση τοποθεσίας."); toggleGPS(); });
+        map.on('locationerror', function(e) { 
+            if(!isRecording) { alert("Απαιτείται πρόσβαση τοποθεσίας."); toggleGPS(); }
+        });
+
+        // --- RECORDING FUNCTIONS ---
+        function toggleRecording() {
+            const btn = document.getElementById('recordBtn');
+            if (!isRecording) {
+                // START
+                if (confirm("Έναρξη καταγραφής διαδρομής; (Βεβαιωθείτε ότι το GPS είναι ενεργό)")) {
+                    isRecording = true;
+                    recordedPath = [];
+                    recordLayerGroup.clearLayers();
+                    recordingPolyline = null;
+                    btn.innerHTML = '<i class="fas fa-stop"></i> Τέλος';
+                    btn.classList.add('recording');
+                    
+                    // Force GPS on if off
+                    if (!isGpsActive) toggleGPS();
+                }
+            } else {
+                // STOP
+                if (confirm("Τερματισμός καταγραφής και λήψη αρχείου GPX;")) {
+                    isRecording = false;
+                    btn.innerHTML = '<i class="fas fa-circle"></i> Καταγραφή';
+                    btn.classList.remove('recording');
+                    downloadRecordedGpx();
+                }
+            }
+        }
+
+        function downloadRecordedGpx() {
+            if (recordedPath.length < 2) {
+                alert("Η διαδρομή είναι πολύ μικρή για αποθήκευση.");
+                return;
+            }
+
+            // Simple GPX Construction
+            let gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="ParnithaMap">
+  <trk>
+    <name>Recorded Track</name>
+    <trkseg>`;
+            
+            recordedPath.forEach(pt => {
+                gpx += `\n      <trkpt lat="${pt.lat}" lon="${pt.lng}"></trkpt>`;
+            });
+
+            gpx += `\n    </trkseg>
+  </trk>
+</gpx>`;
+
+            const blob = new Blob([gpx], {type: 'application/gpx+xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'my_route.gpx';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
 
         // --- MAP LAYER ---
         function updateMapLayer(type) {
