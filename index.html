@@ -2,13 +2,12 @@
 <html lang="el">
 <!-- 
     PARNITHA MAP - AI EDITION
-    VERSION: 1.3 (Stable - No Service Worker Error)
-    FEATURES: GPS Tracking, GPX Recording, AI Ranger, Offline Capable (PWA), 3D Buttons
+    VERSION: 1.4 (Mobile Fixes & Logo)
 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Χάρτης Πάρνηθας - AI Edition v1.3</title>
+    <title>Χάρτης Πάρνηθας - AI Edition v1.4</title>
     
     <!-- PWA SETTINGS -->
     <meta name="theme-color" content="#2e7d32">
@@ -33,15 +32,27 @@
         #map { width: 100%; height: 100%; z-index: 1; cursor: grab; background: #e5e5e5; }
         #map.adding-point { cursor: crosshair; }
 
-        /* --- COMPASS --- */
-        .compass-container { position: absolute; bottom: 120px; right: 20px; z-index: 900; width: 60px; height: 60px; background: linear-gradient(145deg, #ffffff, #e6e6e6); border-radius: 50%; box-shadow: 5px 5px 10px #bfbfbf, -5px -5px 10px #ffffff, inset 0 0 2px rgba(0,0,0,0.1); border: 2px solid #fff; display: flex; justify-content: center; align-items: center; pointer-events: none; }
+        /* --- COMPASS STYLE --- */
+        .compass-container {
+            position: absolute; bottom: 120px; right: 20px; z-index: 900; 
+            width: 60px; height: 60px;
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            border-radius: 50%;
+            box-shadow: 5px 5px 10px #bfbfbf, -5px -5px 10px #ffffff, inset 0 0 2px rgba(0,0,0,0.1);
+            border: 2px solid #fff;
+            display: flex; justify-content: center; align-items: center; pointer-events: none;
+        }
         .compass-face { position: relative; width: 100%; height: 100%; border-radius: 50%; }
         .compass-mark { position: absolute; font-size: 10px; font-weight: bold; color: #555; font-family: 'Arial', sans-serif; }
         .compass-mark.n { top: 4px; left: 50%; transform: translateX(-50%); color: #e74c3c; }
         .compass-mark.s { bottom: 4px; left: 50%; transform: translateX(-50%); }
         .compass-mark.e { right: 5px; top: 50%; transform: translateY(-50%); }
         .compass-mark.w { left: 5px; top: 50%; transform: translateY(-50%); }
-        .compass-needle { position: absolute; top: 50%; left: 50%; width: 4px; height: 40px; background: transparent; transform-origin: center center; transform: translate(-50%, -50%) rotate(0deg); transition: transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44); }
+        .compass-needle {
+            position: absolute; top: 50%; left: 50%; width: 4px; height: 40px; background: transparent;
+            transform-origin: center center; transform: translate(-50%, -50%) rotate(0deg);
+            transition: transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+        }
         .compass-needle::before { content: ''; position: absolute; top: 0; left: 0; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 20px solid #e74c3c; transform: translate(-2px, -2px); }
         .compass-needle::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 20px solid #333; transform: translate(-2px, 2px); }
         .compass-center { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: silver; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 1px 2px rgba(0,0,0,0.3); z-index: 2; }
@@ -68,40 +79,20 @@
         .btn-install { background: #2c3e50; color: white; border-color: #34495e; border-bottom-color: #1a252f; box-shadow: 0 4px 0 #1a252f; display: none; }
         .ai-analyze-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; box-shadow: 0 4px 0 #4a3b75; }
 
-        /* --- DROPDOWN MENU (CENTERED) --- */
+        /* --- DROPDOWN MENU --- */
         .dropdown-container { position: relative; display: inline-block; }
         .dropdown-menu {
-            display: none;
-            position: fixed; /* Fix to screen */
-            top: 50%; left: 50%; /* Center */
-            transform: translate(-50%, -50%);
-            background-color: white;
-            width: 80%; max-width: 300px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            z-index: 5000; /* Top of everything */
-            border-radius: 12px;
-            padding: 15px;
-            flex-direction: column; gap: 10px;
-            text-align: center;
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background-color: white; width: 80%; max-width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 5000; border-radius: 12px; padding: 15px; flex-direction: column; gap: 10px; text-align: center;
         }
         .dropdown-menu.show { display: flex; animation: popIn 0.2s; }
-        .dropdown-item {
-            width: 100%; text-align: left; justify-content: flex-start;
-            background: #f8f9fa; color: #333; border: 1px solid #ddd; border-bottom: 3px solid #ccc;
-            box-shadow: none; padding: 12px; margin-bottom: 0;
-        }
+        .dropdown-item { width: 100%; text-align: left; justify-content: flex-start; background: #f8f9fa; color: #333; border: 1px solid #ddd; border-bottom: 3px solid #ccc; box-shadow: none; padding: 12px; margin-bottom: 0; }
         .dropdown-item:active { transform: translateY(2px); border-bottom-width: 1px; }
-        /* Title in Dropdown */
         .dropdown-title { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
-        /* Overlay for dropdown */
-        .dropdown-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 4999;
-        }
+        .dropdown-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4999; }
         .dropdown-overlay.show { display: block; }
-
         @keyframes popIn { from { opacity: 0; transform: translate(-50%, -40%); } to { opacity: 1; transform: translate(-50%, -50%); } }
-
 
         /* RECORDING DASHBOARD */
         .recording-dashboard { display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; background: rgba(255, 255, 255, 0.95); border-radius: 15px; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); z-index: 4000; padding: 15px; flex-direction: column; border-bottom: 5px solid #e74c3c; }
@@ -119,18 +110,36 @@
         .gps-arrow { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 20px solid #d35400; position: absolute; top: -5px; left: 4px; transform-origin: bottom center; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
         .gps-dot { width: 14px; height: 14px; background: #d35400; border: 2px solid white; border-radius: 50%; position: absolute; top: 12px; left: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
 
-        /* Info Box & Controls */
-        .info-box { position: absolute; top: 20px; left: 20px; z-index: 1000; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); max-width: 250px; border-bottom: 4px solid #ddd; }
+        /* Controls & Info */
+        .info-box { 
+            position: absolute; top: 20px; left: 20px; z-index: 2000; /* Αυξήθηκε το Z-Index */
+            background: white; padding: 15px; border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); max-width: 250px; border-bottom: 4px solid #ddd; 
+        }
         .info-box h2 { margin: 0 0 5px 0; font-size: 16px; color: #2e7d32; text-transform: uppercase; }
         .info-box p { margin: 0; font-size: 11px; color: #666; }
 
-        .controls-box { position: absolute; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 65%; pointer-events: none; }
-        .controls-box > * { pointer-events: auto; }
+        .controls-box { 
+            position: absolute; top: 20px; right: 20px; z-index: 2000; /* Αυξήθηκε το Z-Index για να πατιούνται */
+            display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; 
+            max-width: 65%; pointer-events: none; /* Επιτρέπει κλικ από πίσω στα κενά */
+        }
+        .controls-box > * { pointer-events: auto; } /* Ενεργοποιεί κλικ στα κουμπιά */
 
-        @media (hover: hover) { .control-btn[data-tooltip]:hover::after, .ai-analyze-btn[data-tooltip]:hover::after, .btn-share-main[data-tooltip]:hover::after, .btn-gps-main[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; top: 125%; left: 50%; transform: translateX(-50%); background-color: #333; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap; pointer-events: none; z-index: 3000; } }
+        @media (hover: hover) { 
+            .control-btn[data-tooltip]:hover::after, .ai-analyze-btn[data-tooltip]:hover::after, .btn-share-main[data-tooltip]:hover::after, .btn-gps-main[data-tooltip]:hover::after { 
+                content: attr(data-tooltip); position: absolute; top: 125%; left: 50%; transform: translateX(-50%); 
+                background-color: #333; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap; 
+                pointer-events: none; z-index: 3000; 
+            } 
+        }
 
         #file-input { display: none; }
-        .logo-box { position: absolute; bottom: 30px; left: 20px; z-index: 9999; width: 150px; height: auto; pointer-events: none; filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); transition: width 0.3s; }
+        .logo-box { 
+            position: absolute; bottom: 30px; left: 20px; z-index: 9999; 
+            width: 150px; height: auto; pointer-events: none; 
+            filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); transition: width 0.3s; 
+        }
 
         /* Components */
         #elevation-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80%; max-width: 800px; height: 220px; background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 2000; padding: 10px 20px 10px 10px; display: none; flex-direction: column; border-bottom: 4px solid #ddd; }
@@ -170,15 +179,47 @@
         .radio-group { display: flex; gap: 15px; flex-wrap: wrap; }
         .color-preview { width: 16px; height: 16px; border-radius: 50%; display: inline-block; border: 1px solid #ddd; vertical-align: middle;}
 
+        /* MOBILE FIXES */
         @media (max-width: 768px) {
-            .info-box { top: 10px; left: 10px; padding: 8px; max-width: 140px; }
-            .info-box h2 { font-size: 13px; margin: 0; } .info-box p { display: none; }
-            .controls-box { top: 60px; left: 10px; right: auto; justify-content: flex-start; max-width: 95%; gap: 8px; }
-            .control-btn { padding: 8px 10px; font-size: 12px; }
+            /* Info Box */
+            .info-box { 
+                top: 10px; left: 10px; padding: 10px; max-width: 150px;
+                z-index: 2000; 
+            }
+            .info-box h2 { font-size: 12px; margin: 0; } 
+            .info-box p { display: none; }
+
+            /* Controls Container */
+            .controls-box { 
+                top: 60px; /* Κάτω από το Info Box */
+                left: 10px; /* Στοίχιση Αριστερά */
+                right: auto; 
+                justify-content: flex-start; 
+                max-width: 95%; 
+                gap: 8px;
+                z-index: 2000;
+            }
+            
+            /* Μεγαλύτερα κουμπιά για εύκολο πάτημα */
+            .control-btn { padding: 10px 12px; font-size: 13px; }
+
+            /* Μετακίνηση Zoom Controls για να μην κρύβουν το Chat */
             .leaflet-top.leaflet-left { top: auto !important; bottom: 20px !important; left: 20px !important; }
             .leaflet-control-zoom { margin-bottom: 80px; } 
+            
+            /* Chat & Logo */
             .chat-window { width: 90%; right: 5%; bottom: 100px; height: 50vh; }
-            .logo-box { width: 80px; bottom: 20px; left: auto; right: 20px; display: none; }
+            
+            /* Εμφάνιση Λογότυπου Πάνω Δεξιά */
+            .logo-box { 
+                width: 50px; /* Μικρότερο */
+                top: 10px; 
+                right: 10px; 
+                bottom: auto; left: auto; /* Ακύρωση κάτω/αριστερά */
+                z-index: 2000;
+                display: block; /* Εξασφάλιση εμφάνισης */
+            }
+            
             #elevation-container { width: 95%; height: 180px; bottom: 10px; }
             .compass-container { top: auto; left: auto; bottom: 110px; right: 20px; width: 50px; height: 50px; }
         }
