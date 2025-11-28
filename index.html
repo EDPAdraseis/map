@@ -2,18 +2,17 @@
 <html lang="el">
 <!-- 
     PARNITHA MAP - AI EDITION
-    VERSION: 1.6 (Mobile Menu Interaction Fix)
+    VERSION: 1.7 (Stable Revert - No Blurs/Overlays)
 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Χάρτης Πάρνηθας - AI Edition v1.6</title>
+    <title>Χάρτης Πάρνηθας - AI Edition v1.7</title>
     
     <!-- PWA SETTINGS -->
     <meta name="theme-color" content="#2e7d32">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Parnitha Map">
     
     <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/a-/ALV-UjUCO8MgQJshwSQ6QbDEBjR4OLVCwN3-3eB3-9L4XwPCvNf2YM4=s265-w265-h265">
     <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/a-/ALV-UjUCO8MgQJshwSQ6QbDEBjR4OLVCwN3-3eB3-9L4XwPCvNf2YM4=s265-w265-h265">
@@ -32,46 +31,22 @@
         #map { width: 100%; height: 100%; z-index: 1; cursor: grab; background: #e5e5e5; }
         #map.adding-point { cursor: crosshair; }
 
-        /* --- COMPASS STYLE --- */
-        .compass-container {
-            position: absolute; bottom: 120px; right: 20px; z-index: 900; 
-            width: 60px; height: 60px;
-            background: linear-gradient(145deg, #ffffff, #e6e6e6);
-            border-radius: 50%;
-            box-shadow: 5px 5px 10px #bfbfbf, -5px -5px 10px #ffffff, inset 0 0 2px rgba(0,0,0,0.1);
-            border: 2px solid #fff;
-            display: flex; justify-content: center; align-items: center; pointer-events: none;
-        }
-        .compass-face { position: relative; width: 100%; height: 100%; border-radius: 50%; }
-        .compass-mark { position: absolute; font-size: 10px; font-weight: bold; color: #555; font-family: 'Arial', sans-serif; }
-        .compass-mark.n { top: 4px; left: 50%; transform: translateX(-50%); color: #e74c3c; }
-        .compass-mark.s { bottom: 4px; left: 50%; transform: translateX(-50%); }
-        .compass-mark.e { right: 5px; top: 50%; transform: translateY(-50%); }
-        .compass-mark.w { left: 5px; top: 50%; transform: translateY(-50%); }
-        .compass-needle {
-            position: absolute; top: 50%; left: 50%; width: 4px; height: 40px; background: transparent;
-            transform-origin: center center; transform: translate(-50%, -50%) rotate(0deg);
-            transition: transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44);
-        }
-        .compass-needle::before { content: ''; position: absolute; top: 0; left: 0; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 20px solid #e74c3c; transform: translate(-2px, -2px); }
-        .compass-needle::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 20px solid #333; transform: translate(-2px, 2px); }
-        .compass-center { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: silver; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 1px 2px rgba(0,0,0,0.3); z-index: 2; }
-
-        /* --- 3D BUTTON STYLES --- */
+        /* --- 3D BUTTONS --- */
         .control-btn, .ai-analyze-btn, .dropdown-item, .settings-save-btn, .delete-marker-btn, .rec-btn {
             border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold;
             display: inline-flex; align-items: center; justify-content: center; gap: 6px;
             position: relative; transition: all 0.1s ease; outline: none; text-transform: uppercase;
             letter-spacing: 0.5px; padding: 8px 14px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transform: translateY(0);
         }
-        .control-btn:active, .ai-analyze-btn:active, .dropdown-item:active, .settings-save-btn:active, .rec-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0.2); }
+        .control-btn:active, .dropdown-item:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0.2); }
 
+        /* COLORS */
         .control-btn { background: #ffffff; color: #333; border: 1px solid #e0e0e0; border-bottom-color: #bdc3c7; }
         .btn-gps-main { background: #3498db; color: white; border-color: #2980b9; border-bottom-color: #1f6391; box-shadow: 0 4px 0 #1f6391; }
         .btn-gps-main.active { background: #2ecc71; border-color: #27ae60; border-bottom-color: #1e8449; box-shadow: 0 4px 0 #1e8449; }
         .btn-gps-main.searching { background: #f39c12; border-color: #d68910; border-bottom-color: #b9770e; box-shadow: 0 4px 0 #b9770e; animation: pulse-orange 1.5s infinite; }
         @keyframes pulse-orange { 0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(243, 156, 18, 0); } 100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); } }
-        
+
         .btn-add-point { background: #e67e22; color: white; border-color: #d35400; border-bottom-color: #a04000; box-shadow: 0 4px 0 #a04000; }
         .btn-add-point.active { background: #c0392b; border-color: #922b21; box-shadow: 0 4px 0 #641e16; }
         .btn-save-html { background: #16a085; color: white; border-color: #1abc9c; border-bottom-color: #0e6655; box-shadow: 0 4px 0 #0e6655; }
@@ -79,41 +54,20 @@
         .btn-install { background: #2c3e50; color: white; border-color: #34495e; border-bottom-color: #1a252f; box-shadow: 0 4px 0 #1a252f; display: none; }
         .ai-analyze-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; box-shadow: 0 4px 0 #4a3b75; }
 
-        /* --- DROPDOWN MENU (CENTERED & FIXED) --- */
+        /* --- DROPDOWN MENU (CLASSIC) --- */
         .dropdown-container { position: relative; display: inline-block; }
         .dropdown-menu {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background-color: white; width: 85%; max-width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            z-index: 6000; border-radius: 12px; padding: 15px; flex-direction: column; gap: 10px; text-align: center;
+            display: none; position: absolute; top: 120%; right: 0; 
+            background-color: white; min-width: 180px; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3); z-index: 3000; 
+            border-radius: 8px; border: 1px solid #eee; padding: 5px; 
+            flex-direction: column; gap: 5px;
         }
-        .dropdown-menu.show { display: flex; animation: popIn 0.2s; }
-        .dropdown-item { width: 100%; text-align: left; justify-content: flex-start; background: #f8f9fa; color: #333; border: 1px solid #ddd; border-bottom: 3px solid #ccc; box-shadow: none; padding: 15px; margin-bottom: 0; font-size: 14px; }
-        .dropdown-item:active { transform: translateY(2px); border-bottom-width: 1px; }
-        .dropdown-title { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
-        .dropdown-overlay { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.6); z-index: 5999; backdrop-filter: blur(2px);
-        }
-        .dropdown-overlay.show { display: block; }
-        @keyframes popIn { from { opacity: 0; transform: translate(-50%, -40%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+        .dropdown-menu.show { display: flex; }
+        .dropdown-item { width: 100%; text-align: left; background: #fff; color: #333; border: 1px solid #eee; border-bottom: 2px solid #ddd; margin-bottom: 2px; }
+        .dropdown-item:hover { background-color: #f0f0f0; }
 
-        /* RECORDING DASHBOARD */
-        .recording-dashboard { display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; background: rgba(255, 255, 255, 0.95); border-radius: 15px; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); z-index: 4000; padding: 15px; flex-direction: column; border-bottom: 5px solid #e74c3c; }
-        .rec-stats { display: flex; justify-content: space-between; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 10px; }
-        .rec-stat-item { text-align: center; flex: 1; border-right: 1px solid #ddd; }
-        .rec-stat-item:last-child { border-right: none; }
-        .rec-val { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: bold; color: #333; display: block;}
-        .rec-label { font-size: 10px; color: #666; text-transform: uppercase; }
-        .rec-controls { display: flex; gap: 10px; justify-content: center; }
-        .rec-btn-stop { background: #c0392b; color: white; border-bottom-color: #922b21; box-shadow: 0 4px 0 #922b21; flex: 1;}
-        .rec-btn-pause { background: #f39c12; color: white; border-bottom-color: #d68910; box-shadow: 0 4px 0 #d68910; flex: 1;}
-        .rec-btn-pause.resume { background: #27ae60; border-bottom-color: #1e8449; box-shadow: 0 4px 0 #1e8449; }
-
-        /* GPS Marker */
-        .gps-arrow { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 20px solid #d35400; position: absolute; top: -5px; left: 4px; transform-origin: bottom center; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
-        .gps-dot { width: 14px; height: 14px; background: #d35400; border: 2px solid white; border-radius: 50%; position: absolute; top: 12px; left: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
-
-        /* Controls & Info */
+        /* CONTROLS & INFO */
         .info-box { 
             position: absolute; top: 20px; left: 20px; z-index: 2000; 
             background: white; padding: 15px; border-radius: 12px; 
@@ -127,36 +81,47 @@
             display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; 
             max-width: 65%; pointer-events: none; 
         }
-        .controls-box > * { pointer-events: auto; } 
+        .controls-box > * { pointer-events: auto; }
 
-        @media (hover: hover) { 
-            .control-btn[data-tooltip]:hover::after, .ai-analyze-btn[data-tooltip]:hover::after, .btn-share-main[data-tooltip]:hover::after, .btn-gps-main[data-tooltip]:hover::after { 
-                content: attr(data-tooltip); position: absolute; top: 125%; left: 50%; transform: translateX(-50%); 
-                background-color: #333; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap; 
-                pointer-events: none; z-index: 3000; 
-            } 
+        /* COMPASS */
+        .compass-container {
+            position: absolute; bottom: 120px; right: 20px; z-index: 900; 
+            width: 60px; height: 60px; pointer-events: none;
+        }
+        .compass-face { position: relative; width: 100%; height: 100%; background: url('compass.png') no-repeat center/contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: transform 0.1s; }
+        /* Fallback if image missing */
+        .compass-fallback {
+            width: 100%; height: 100%; border-radius: 50%; background: white; border: 2px solid #ccc; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: bold;
         }
 
-        #file-input { display: none; }
+        /* LOGO */
         .logo-box { 
-            position: absolute; bottom: 30px; left: 20px; z-index: 1500;
+            position: absolute; bottom: 30px; left: 20px; z-index: 1500; 
             width: 150px; height: auto; pointer-events: none; 
-            filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); transition: width 0.3s; 
+            filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); 
         }
 
-        /* Components */
+        /* RECORDING DASHBOARD */
+        .recording-dashboard { display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; background: rgba(255, 255, 255, 0.95); border-radius: 15px; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); z-index: 4000; padding: 15px; flex-direction: column; border-bottom: 5px solid #e74c3c; }
+        .rec-stats { display: flex; justify-content: space-between; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 10px; }
+        .rec-stat-item { text-align: center; flex: 1; border-right: 1px solid #ddd; }
+        .rec-stat-item:last-child { border-right: none; }
+        .rec-val { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: bold; color: #333; display: block;}
+        .rec-label { font-size: 10px; color: #666; text-transform: uppercase; }
+        .rec-controls { display: flex; gap: 10px; justify-content: center; }
+        .rec-btn-stop { background: #c0392b; color: white; border-bottom-color: #922b21; box-shadow: 0 4px 0 #922b21; flex: 1;}
+        .rec-btn-pause { background: #f39c12; color: white; border-bottom-color: #d68910; box-shadow: 0 4px 0 #d68910; flex: 1;}
+        .rec-btn-pause.resume { background: #27ae60; border-bottom-color: #1e8449; box-shadow: 0 4px 0 #1e8449; }
+
+        /* ELEVATION */
         #elevation-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80%; max-width: 800px; height: 220px; background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 2000; padding: 10px 20px 10px 10px; display: none; flex-direction: column; border-bottom: 4px solid #ddd; }
         .elevation-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #333; }
         .elevation-actions { display: flex; gap: 10px; }
         .close-chart-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: #888; }
         #elevationChart { width: 100% !important; height: 160px !important; }
-        .custom-popup .leaflet-popup-content-wrapper { background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 3px 14px rgba(0,0,0,0.4); text-align: center; }
-        .popup-title { font-size: 18px; font-weight: bold; color: #2c3e50; display: block; }
-        .popup-desc { font-size: 14px; color: #555; }
-        .delete-marker-btn { background: #e74c3c; color: white; box-shadow: 0 3px 0 #c0392b; font-size: 11px; padding: 4px 8px; margin-top: 5px;}
 
+        /* CHAT */
         .chat-fab { position: absolute; bottom: 40px; right: 20px; z-index: 3000; width: 60px; height: 60px; background: #2e7d32; border-radius: 50%; box-shadow: 0 6px 0 #1e6f2e, 0 10px 10px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; font-size: 26px; transition: transform 0.1s; border: 2px solid #fff; }
-        .chat-fab:active { transform: translateY(6px); box-shadow: 0 0 0 #1e6f2e; }
         .chat-window { position: absolute; bottom: 110px; right: 20px; width: 300px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 3000; display: none; flex-direction: column; overflow: hidden; border: 1px solid #ddd; }
         .chat-header { background: #2e7d32; color: white; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .chat-messages { flex: 1; padding: 10px; overflow-y: auto; background: #f9f9f9; font-size: 13px; }
@@ -168,11 +133,11 @@
         .chat-send-btn { background: #2e7d32; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         .typing-indicator { font-style: italic; color: #888; font-size: 12px; display: none; margin: 5px; }
 
+        /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 5000; display: none; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; border-bottom: 5px solid #ddd; }
         .modal-close { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #888; }
         .ai-result-title { font-size: 18px; font-weight: bold; color: #667eea; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;}
-        
         .settings-group { margin-bottom: 15px; }
         .settings-label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 13px; color: #555; }
         .library-list { list-style: none; padding: 0; margin: 0; }
@@ -181,34 +146,33 @@
         .settings-save-btn { background: #2e7d32; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px;}
         .radio-group { display: flex; gap: 15px; flex-wrap: wrap; }
         .color-preview { width: 16px; height: 16px; border-radius: 50%; display: inline-block; border: 1px solid #ddd; vertical-align: middle;}
+        .custom-popup .leaflet-popup-content-wrapper { background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 3px 14px rgba(0,0,0,0.4); text-align: center; }
+        .popup-title { font-size: 18px; font-weight: bold; color: #2c3e50; display: block; }
+        .popup-desc { font-size: 14px; color: #555; }
+        .delete-marker-btn { background: #e74c3c; color: white; box-shadow: 0 3px 0 #c0392b; font-size: 11px; padding: 4px 8px; margin-top: 5px;}
 
-        /* MOBILE FIXES */
+        /* GPS User Icon */
+        .gps-arrow { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 20px solid #d35400; position: absolute; top: -5px; left: 4px; transform-origin: bottom center; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
+        .gps-dot { width: 14px; height: 14px; background: #d35400; border: 2px solid white; border-radius: 50%; position: absolute; top: 12px; left: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+
+        /* MEDIA QUERIES (Mobile) */
         @media (max-width: 768px) {
-            .info-box { top: 10px; left: 10px; padding: 10px; max-width: 150px; z-index: 2000; }
-            .info-box h2 { font-size: 12px; margin: 0; } .info-box p { display: none; }
-            
-            .controls-box { 
-                top: 60px; left: 10px; right: auto; justify-content: flex-start; 
-                max-width: 95%; gap: 8px; z-index: 2000; 
-            }
+            .info-box { top: 10px; left: 10px; padding: 10px; max-width: 140px; z-index: 2000; }
+            .info-box h2 { font-size: 13px; margin: 0; } .info-box p { display: none; }
+            .controls-box { top: 60px; left: 10px; right: auto; justify-content: flex-start; max-width: 95%; gap: 8px; z-index: 2000; }
             .control-btn { padding: 10px 12px; font-size: 13px; }
-
             .leaflet-top.leaflet-left { top: auto !important; bottom: 20px !important; left: 20px !important; }
-            .leaflet-control-zoom { margin-bottom: 80px; } 
-            
+            .leaflet-control-zoom { margin-bottom: 80px; }
             .chat-window { width: 90%; right: 5%; bottom: 100px; height: 50vh; }
-            
-            /* Logo Fix */
-            .logo-box { 
-                width: 150px; 
-                bottom: 30px; left: 20px; 
-                display: block;
-                z-index: 1500; 
-            }
-            
             #elevation-container { width: 95%; height: 180px; bottom: 10px; }
+            
+            /* Mobile Compass Position */
             .compass-container { top: auto; left: auto; bottom: 110px; right: 20px; width: 50px; height: 50px; }
+            
+            /* Tooltips off on mobile */
+            [data-tooltip]:hover::after { display: none; }
         }
+        #file-input { display: none; }
     </style>
     
     <!-- MANIFEST SCRIPT (Try-Catch) -->
@@ -233,8 +197,6 @@
     </script>
 </head>
 <body>
-    <!-- DROPDOWN OVERLAY -->
-    <div id="dropdownOverlay" class="dropdown-overlay" onclick="closeAllMenus()"></div>
 
     <div class="info-box">
         <h2>ΕΘΕΛΟΝΤΙΚΗ ΔΡΑΣΗ ΠΑΡΝΗΘΑΣ</h2>
@@ -242,10 +204,7 @@
     </div>
 
     <div id="compass" class="compass-container">
-        <div class="compass-face">
-            <div class="compass-mark n">N</div><div class="compass-mark s">S</div><div class="compass-mark e">E</div><div class="compass-mark w">W</div>
-            <div id="compassNeedle" class="compass-needle"></div><div class="compass-center"></div>
-        </div>
+        <div class="compass-face"></div> <!-- Background Image handled in CSS -->
     </div>
 
     <div class="controls-box" id="mainControls">
@@ -254,7 +213,6 @@
         <div class="dropdown-container">
             <button class="control-btn btn-gps-main" data-tooltip="GPS Επιλογές" onclick="toggleGpsMenu(event)"><i class="fas fa-satellite-dish"></i> GPS</button>
             <div id="gpsDropdown" class="dropdown-menu">
-                <div class="dropdown-title">Επιλογές GPS</div>
                 <button class="dropdown-item" onclick="toggleGPS(event)"><i class="fas fa-crosshairs"></i> Εμφάνιση Θέσης</button>
                 <button class="dropdown-item" onclick="startRecordingMode(event)"><i class="fas fa-circle" style="color:red;"></i> Έναρξη Καταγραφής</button>
                 <div style="font-size:10px; color:#666; padding:5px;">*Η καταγραφή θα αποθηκευτεί στις Λήψεις σας</div>
@@ -269,7 +227,6 @@
         <div class="dropdown-container">
             <button class="control-btn btn-share-main" data-tooltip="Share" onclick="toggleShareMenu(event)"><i class="fas fa-share-alt"></i> Share</button>
             <div id="shareDropdown" class="dropdown-menu">
-                <div class="dropdown-title">Ενέργειες</div>
                 <button class="dropdown-item" onclick="createShareLink(event)"><i class="fas fa-link"></i> Αντιγραφή Link</button>
                 <button class="dropdown-item" onclick="window.print()"><i class="fas fa-print"></i> Εκτύπωση / PDF</button>
                 <button class="dropdown-item" onclick="saveMapAsImage(event)"><i class="fas fa-camera"></i> Αποθήκευση JPG</button>
@@ -279,8 +236,6 @@
         <button class="control-btn btn-clear" data-tooltip="Διαγραφή GPX" onclick="clearRoutes()"><i class="fas fa-trash"></i></button>
         <button class="control-btn btn-email" data-tooltip="Επικοινωνία" onclick="window.location.href='mailto:info@drasiparnithas.gr?subject=Επικοινωνία'"><i class="fas fa-envelope"></i></button>
         <button class="control-btn btn-settings" data-tooltip="Ρυθμίσεις" onclick="openSettings()"><i class="fas fa-cog"></i></button>
-        
-        <!-- Κουμπί Εγκατάστασης -->
         <button id="installBtn" class="control-btn btn-install" onclick="installApp()"><i class="fas fa-download"></i> App</button>
         
         <input type="file" id="file-input" accept=".gpx" onchange="handleFileSelect(event)">
@@ -417,6 +372,8 @@
             loadPermanentMarkers();
             const settings = getSettings();
             updateMapLayer(settings.mapType);
+            
+            // Orientation Handler
             if (window.DeviceOrientationEvent) {
                 if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
                     window.addEventListener('deviceorientation', handleOrientation, true);
@@ -428,7 +385,11 @@
             let heading = null;
             if (event.webkitCompassHeading) heading = event.webkitCompassHeading;
             else if (event.alpha) heading = 360 - event.alpha;
-            if (heading !== null) document.getElementById('compassNeedle').style.transform = `translate(-50%, -50%) rotate(${-heading}deg)`;
+            if (heading !== null) {
+                // Rotate background image of compass
+                const rose = document.querySelector('.compass-face');
+                if(rose) rose.style.transform = `rotate(${-heading}deg)`;
+            }
         }
 
         function requestOrientationPermission() {
@@ -441,22 +402,25 @@
 
         function recenterMap() { map.setView([38.168, 23.722], 14); }
         
-        // --- IMPROVED MENU TOGGLE ---
+        // MENU LOGIC (REVERTED TO SIMPLE TOGGLE)
         function toggleShareMenu(e) { 
             if(e) e.stopPropagation();
             closeAllMenus(); 
-            document.getElementById('dropdownOverlay').classList.add('show'); 
             document.getElementById('shareDropdown').classList.add('show'); 
         }
         function toggleGpsMenu(e) { 
             if(e) e.stopPropagation();
             closeAllMenus(); 
-            document.getElementById('dropdownOverlay').classList.add('show'); 
             document.getElementById('gpsDropdown').classList.add('show'); 
         }
         function closeAllMenus() { 
             document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('show')); 
-            document.getElementById('dropdownOverlay').classList.remove('show');
+        }
+        // Close menus when clicking map or anywhere else
+        window.onclick = function(event) {
+            if (!event.target.closest('.dropdown-container')) {
+                closeAllMenus();
+            }
         }
 
         function toggleGPS(e) {
