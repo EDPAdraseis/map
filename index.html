@@ -2,12 +2,12 @@
 <html lang="el">
 <!-- 
     PARNITHA MAP - AI EDITION
-    VERSION: 1.4 (Mobile Fixes & Logo)
+    VERSION: 1.5 (Logo Bottom-Left & Menu Fix)
 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Χάρτης Πάρνηθας - AI Edition v1.4</title>
+    <title>Χάρτης Πάρνηθας - AI Edition v1.5</title>
     
     <!-- PWA SETTINGS -->
     <meta name="theme-color" content="#2e7d32">
@@ -84,13 +84,17 @@
         .dropdown-menu {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background-color: white; width: 80%; max-width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            z-index: 5000; border-radius: 12px; padding: 15px; flex-direction: column; gap: 10px; text-align: center;
+            z-index: 6000; /* Αυξήθηκε το Z-Index για να είναι πάνω από όλα */
+            border-radius: 12px; padding: 15px; flex-direction: column; gap: 10px; text-align: center;
         }
         .dropdown-menu.show { display: flex; animation: popIn 0.2s; }
         .dropdown-item { width: 100%; text-align: left; justify-content: flex-start; background: #f8f9fa; color: #333; border: 1px solid #ddd; border-bottom: 3px solid #ccc; box-shadow: none; padding: 12px; margin-bottom: 0; }
         .dropdown-item:active { transform: translateY(2px); border-bottom-width: 1px; }
         .dropdown-title { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
-        .dropdown-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4999; }
+        .dropdown-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.5); z-index: 5999; /* Αυξήθηκε το Z-Index */
+        }
         .dropdown-overlay.show { display: block; }
         @keyframes popIn { from { opacity: 0; transform: translate(-50%, -40%); } to { opacity: 1; transform: translate(-50%, -50%); } }
 
@@ -112,7 +116,7 @@
 
         /* Controls & Info */
         .info-box { 
-            position: absolute; top: 20px; left: 20px; z-index: 2000; /* Αυξήθηκε το Z-Index */
+            position: absolute; top: 20px; left: 20px; z-index: 2000; 
             background: white; padding: 15px; border-radius: 12px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.15); max-width: 250px; border-bottom: 4px solid #ddd; 
         }
@@ -120,11 +124,11 @@
         .info-box p { margin: 0; font-size: 11px; color: #666; }
 
         .controls-box { 
-            position: absolute; top: 20px; right: 20px; z-index: 2000; /* Αυξήθηκε το Z-Index για να πατιούνται */
+            position: absolute; top: 20px; right: 20px; z-index: 2000; 
             display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; 
-            max-width: 65%; pointer-events: none; /* Επιτρέπει κλικ από πίσω στα κενά */
+            max-width: 65%; pointer-events: none; 
         }
-        .controls-box > * { pointer-events: auto; } /* Ενεργοποιεί κλικ στα κουμπιά */
+        .controls-box > * { pointer-events: auto; } 
 
         @media (hover: hover) { 
             .control-btn[data-tooltip]:hover::after, .ai-analyze-btn[data-tooltip]:hover::after, .btn-share-main[data-tooltip]:hover::after, .btn-gps-main[data-tooltip]:hover::after { 
@@ -136,7 +140,7 @@
 
         #file-input { display: none; }
         .logo-box { 
-            position: absolute; bottom: 30px; left: 20px; z-index: 9999; 
+            position: absolute; bottom: 30px; left: 20px; z-index: 1500; /* Μειώθηκε το Z-Index */
             width: 150px; height: auto; pointer-events: none; 
             filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); transition: width 0.3s; 
         }
@@ -209,16 +213,6 @@
             
             /* Chat & Logo */
             .chat-window { width: 90%; right: 5%; bottom: 100px; height: 50vh; }
-            
-            /* Εμφάνιση Λογότυπου Πάνω Δεξιά */
-            .logo-box { 
-                width: 50px; /* Μικρότερο */
-                top: 10px; 
-                right: 10px; 
-                bottom: auto; left: auto; /* Ακύρωση κάτω/αριστερά */
-                z-index: 2000;
-                display: block; /* Εξασφάλιση εμφάνισης */
-            }
             
             #elevation-container { width: 95%; height: 180px; bottom: 10px; }
             .compass-container { top: auto; left: auto; bottom: 110px; right: 20px; width: 50px; height: 50px; }
