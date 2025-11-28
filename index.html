@@ -2,12 +2,12 @@
 <html lang="el">
 <!-- 
     PARNITHA MAP - AI EDITION
-    VERSION: 1.5 (Logo Bottom-Left & Menu Fix)
+    VERSION: 1.6 (Mobile Menu Interaction Fix)
 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Χάρτης Πάρνηθας - AI Edition v1.5</title>
+    <title>Χάρτης Πάρνηθας - AI Edition v1.6</title>
     
     <!-- PWA SETTINGS -->
     <meta name="theme-color" content="#2e7d32">
@@ -79,21 +79,20 @@
         .btn-install { background: #2c3e50; color: white; border-color: #34495e; border-bottom-color: #1a252f; box-shadow: 0 4px 0 #1a252f; display: none; }
         .ai-analyze-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; box-shadow: 0 4px 0 #4a3b75; }
 
-        /* --- DROPDOWN MENU --- */
+        /* --- DROPDOWN MENU (CENTERED & FIXED) --- */
         .dropdown-container { position: relative; display: inline-block; }
         .dropdown-menu {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background-color: white; width: 80%; max-width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            z-index: 6000; /* Αυξήθηκε το Z-Index για να είναι πάνω από όλα */
-            border-radius: 12px; padding: 15px; flex-direction: column; gap: 10px; text-align: center;
+            background-color: white; width: 85%; max-width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 6000; border-radius: 12px; padding: 15px; flex-direction: column; gap: 10px; text-align: center;
         }
         .dropdown-menu.show { display: flex; animation: popIn 0.2s; }
-        .dropdown-item { width: 100%; text-align: left; justify-content: flex-start; background: #f8f9fa; color: #333; border: 1px solid #ddd; border-bottom: 3px solid #ccc; box-shadow: none; padding: 12px; margin-bottom: 0; }
+        .dropdown-item { width: 100%; text-align: left; justify-content: flex-start; background: #f8f9fa; color: #333; border: 1px solid #ddd; border-bottom: 3px solid #ccc; box-shadow: none; padding: 15px; margin-bottom: 0; font-size: 14px; }
         .dropdown-item:active { transform: translateY(2px); border-bottom-width: 1px; }
         .dropdown-title { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
         .dropdown-overlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.5); z-index: 5999; /* Αυξήθηκε το Z-Index */
+            background: rgba(0,0,0,0.6); z-index: 5999; backdrop-filter: blur(2px);
         }
         .dropdown-overlay.show { display: block; }
         @keyframes popIn { from { opacity: 0; transform: translate(-50%, -40%); } to { opacity: 1; transform: translate(-50%, -50%); } }
@@ -140,7 +139,7 @@
 
         #file-input { display: none; }
         .logo-box { 
-            position: absolute; bottom: 30px; left: 20px; z-index: 1500; /* Μειώθηκε το Z-Index */
+            position: absolute; bottom: 30px; left: 20px; z-index: 1500;
             width: 150px; height: auto; pointer-events: none; 
             filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); transition: width 0.3s; 
         }
@@ -185,34 +184,27 @@
 
         /* MOBILE FIXES */
         @media (max-width: 768px) {
-            /* Info Box */
-            .info-box { 
-                top: 10px; left: 10px; padding: 10px; max-width: 150px;
-                z-index: 2000; 
-            }
-            .info-box h2 { font-size: 12px; margin: 0; } 
-            .info-box p { display: none; }
-
-            /* Controls Container */
-            .controls-box { 
-                top: 60px; /* Κάτω από το Info Box */
-                left: 10px; /* Στοίχιση Αριστερά */
-                right: auto; 
-                justify-content: flex-start; 
-                max-width: 95%; 
-                gap: 8px;
-                z-index: 2000;
-            }
+            .info-box { top: 10px; left: 10px; padding: 10px; max-width: 150px; z-index: 2000; }
+            .info-box h2 { font-size: 12px; margin: 0; } .info-box p { display: none; }
             
-            /* Μεγαλύτερα κουμπιά για εύκολο πάτημα */
+            .controls-box { 
+                top: 60px; left: 10px; right: auto; justify-content: flex-start; 
+                max-width: 95%; gap: 8px; z-index: 2000; 
+            }
             .control-btn { padding: 10px 12px; font-size: 13px; }
 
-            /* Μετακίνηση Zoom Controls για να μην κρύβουν το Chat */
             .leaflet-top.leaflet-left { top: auto !important; bottom: 20px !important; left: 20px !important; }
             .leaflet-control-zoom { margin-bottom: 80px; } 
             
-            /* Chat & Logo */
             .chat-window { width: 90%; right: 5%; bottom: 100px; height: 50vh; }
+            
+            /* Logo Fix */
+            .logo-box { 
+                width: 150px; 
+                bottom: 30px; left: 20px; 
+                display: block;
+                z-index: 1500; 
+            }
             
             #elevation-container { width: 95%; height: 180px; bottom: 10px; }
             .compass-container { top: auto; left: auto; bottom: 110px; right: 20px; width: 50px; height: 50px; }
@@ -260,11 +252,11 @@
         <button class="control-btn" data-tooltip="Κεντράρισμα" onclick="recenterMap()"><i class="fas fa-home"></i></button>
         
         <div class="dropdown-container">
-            <button class="control-btn btn-gps-main" data-tooltip="GPS Επιλογές" onclick="toggleGpsMenu()"><i class="fas fa-satellite-dish"></i> GPS</button>
+            <button class="control-btn btn-gps-main" data-tooltip="GPS Επιλογές" onclick="toggleGpsMenu(event)"><i class="fas fa-satellite-dish"></i> GPS</button>
             <div id="gpsDropdown" class="dropdown-menu">
                 <div class="dropdown-title">Επιλογές GPS</div>
-                <button class="dropdown-item" onclick="toggleGPS()"><i class="fas fa-crosshairs"></i> Εμφάνιση Θέσης</button>
-                <button class="dropdown-item" onclick="startRecordingMode()"><i class="fas fa-circle" style="color:red;"></i> Έναρξη Καταγραφής</button>
+                <button class="dropdown-item" onclick="toggleGPS(event)"><i class="fas fa-crosshairs"></i> Εμφάνιση Θέσης</button>
+                <button class="dropdown-item" onclick="startRecordingMode(event)"><i class="fas fa-circle" style="color:red;"></i> Έναρξη Καταγραφής</button>
                 <div style="font-size:10px; color:#666; padding:5px;">*Η καταγραφή θα αποθηκευτεί στις Λήψεις σας</div>
             </div>
         </div>
@@ -275,12 +267,12 @@
         <button class="control-btn btn-library" data-tooltip="Βιβλιοθήκη" onclick="openLibrary()"><i class="fas fa-book"></i></button>
 
         <div class="dropdown-container">
-            <button class="control-btn btn-share-main" data-tooltip="Share" onclick="toggleShareMenu()"><i class="fas fa-share-alt"></i> Share</button>
+            <button class="control-btn btn-share-main" data-tooltip="Share" onclick="toggleShareMenu(event)"><i class="fas fa-share-alt"></i> Share</button>
             <div id="shareDropdown" class="dropdown-menu">
                 <div class="dropdown-title">Ενέργειες</div>
-                <button class="dropdown-item" onclick="createShareLink()"><i class="fas fa-link"></i> Αντιγραφή Link</button>
+                <button class="dropdown-item" onclick="createShareLink(event)"><i class="fas fa-link"></i> Αντιγραφή Link</button>
                 <button class="dropdown-item" onclick="window.print()"><i class="fas fa-print"></i> Εκτύπωση / PDF</button>
-                <button class="dropdown-item" onclick="saveMapAsImage()"><i class="fas fa-camera"></i> Αποθήκευση JPG</button>
+                <button class="dropdown-item" onclick="saveMapAsImage(event)"><i class="fas fa-camera"></i> Αποθήκευση JPG</button>
             </div>
         </div>
 
@@ -351,8 +343,6 @@
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <script>
-        // REMOVED BROKEN SW BLOB CODE
-        
         const GLOBAL_API_KEY = "AIzaSyASDnF3E2gmAvv8WY96wg3m3ZkpAntDUU4"; 
         const STORAGE_KEY = 'parnitha_saved_routes';
         const SETTINGS_KEY = 'parnitha_settings';
@@ -450,14 +440,27 @@
         }
 
         function recenterMap() { map.setView([38.168, 23.722], 14); }
-        function toggleShareMenu() { closeAllMenus(); document.getElementById('dropdownOverlay').classList.add('show'); document.getElementById('shareDropdown').classList.add('show'); }
-        function toggleGpsMenu() { closeAllMenus(); document.getElementById('dropdownOverlay').classList.add('show'); document.getElementById('gpsDropdown').classList.add('show'); }
+        
+        // --- IMPROVED MENU TOGGLE ---
+        function toggleShareMenu(e) { 
+            if(e) e.stopPropagation();
+            closeAllMenus(); 
+            document.getElementById('dropdownOverlay').classList.add('show'); 
+            document.getElementById('shareDropdown').classList.add('show'); 
+        }
+        function toggleGpsMenu(e) { 
+            if(e) e.stopPropagation();
+            closeAllMenus(); 
+            document.getElementById('dropdownOverlay').classList.add('show'); 
+            document.getElementById('gpsDropdown').classList.add('show'); 
+        }
         function closeAllMenus() { 
             document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('show')); 
             document.getElementById('dropdownOverlay').classList.remove('show');
         }
 
-        function toggleGPS() {
+        function toggleGPS(e) {
+            if(e) e.stopPropagation();
             closeAllMenus();
             if (isRecording) return;
             const btn = document.querySelector('.btn-gps-main');
@@ -471,7 +474,8 @@
             }
         }
 
-        function startRecordingMode() {
+        function startRecordingMode(e) {
+            if(e) e.stopPropagation();
             closeAllMenus();
             if (isGpsActive) { map.stopLocate(); isGpsActive = false; } 
             isRecording = true; isPaused = false; recordedPath = []; totalDistance = 0; lastPoint = null;
@@ -583,7 +587,10 @@
         function closeSettingsModal(e) { if (!e || e.target.id === 'settingsModal' || e.target.classList.contains('modal-close')) document.getElementById('settingsModal').style.display = 'none'; }
         function handleFileSelect(event) { const f = event.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = function(e) { saveRouteToStorage(f.name, e.target.result); loadGpxFromUrl(URL.createObjectURL(new Blob([e.target.result], {type: 'text/xml'}))); }; r.readAsText(f); event.target.value = ''; }
         function loadGpxFromUrl(url) { gpxLayerGroup.clearLayers(); closeElevationChart(); currentRouteData=null; document.getElementById('ai-btn').style.display='none'; const s = getSettings(); new L.GPX(url, { async: true, marker_options: { startIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-start.png', endIconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-icon-end.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/pin-shadow.png' }, polyline_options: { color: s.color, opacity: 0.8, weight: s.weight, lineCap: 'round' } }).on('loaded', function(e) { map.fitBounds(e.target.getBounds()); currentRouteData = { dist: (e.target.get_distance()/1000).toFixed(2), gain: e.target.get_elevation_gain().toFixed(0), maxEle: e.target.get_elevation_max().toFixed(0) }; if (e.target.get_elevation_data().length > 0) { drawElevationChart(e.target.get_elevation_data()); document.getElementById('ai-btn').style.display='block'; } }).addTo(gpxLayerGroup); }
-        function saveMapAsImage() { const c=document.querySelector('.controls-box'), f=document.querySelector('.chat-fab'), i=document.querySelector('.info-box'), p=document.getElementById('compass'); c.style.display='none'; f.style.display='none'; i.style.display='none'; p.style.display='none'; html2canvas(document.body, { useCORS: true, allowTaint: true, scrollY: -window.scrollY }).then(canvas => { c.style.display='flex'; f.style.display='flex'; i.style.display='block'; p.style.display='flex'; const l=document.createElement('a'); l.download='map.jpg'; l.href=canvas.toDataURL('image/jpeg',0.9); l.click(); }).catch(e=>{ c.style.display='flex'; f.style.display='flex'; i.style.display='block'; p.style.display='flex'; alert("Error."); }); }
+        function saveMapAsImage(e) { 
+            if(e) e.stopPropagation();
+            closeAllMenus();
+            const c=document.querySelector('.controls-box'), f=document.querySelector('.chat-fab'), i=document.querySelector('.info-box'), p=document.getElementById('compass'); c.style.display='none'; f.style.display='none'; i.style.display='none'; p.style.display='none'; html2canvas(document.body, { useCORS: true, allowTaint: true, scrollY: -window.scrollY }).then(canvas => { c.style.display='flex'; f.style.display='flex'; i.style.display='block'; p.style.display='flex'; const l=document.createElement('a'); l.download='map.jpg'; l.href=canvas.toDataURL('image/jpeg',0.9); l.click(); }).catch(e=>{ c.style.display='flex'; f.style.display='flex'; i.style.display='block'; p.style.display='flex'; alert("Error."); }); }
         function getApiKey() { return (GLOBAL_API_KEY && GLOBAL_API_KEY.length > 5) ? GLOBAL_API_KEY : (localStorage.getItem('gemini_api_key') || ""); }
         async function callGemini(p) { const k = getApiKey(); if(!k) return "⚠️ Missing Key"; try { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${k}`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({contents:[{parts:[{text:p}]}]})}); if(!r.ok) throw new Error(); const d=await r.json(); return d.candidates?.[0]?.content?.parts?.[0]?.text||"Error"; } catch(e){return "Connection Error";} }
         async function fetchGitHubFiles() { const l = document.getElementById('githubList'); l.innerHTML='Loading...'; try { const r = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/`); const d=await r.json(); l.innerHTML=''; d.filter(i=>i.name.endsWith('.gpx')).forEach(f=>{ l.innerHTML+=`<li class="library-item" onclick="loadAndCloseLibrary('${f.download_url}')"><span class="library-name"><i class="fas fa-cloud" style="color:#3498db; margin-right:5px;"></i> ${f.name}</span></li>`; }); if(!l.innerHTML) l.innerHTML='<li class="empty-library">Empty.</li>'; } catch(e){l.innerHTML='Error loading GitHub.';} }
@@ -592,7 +599,11 @@
         function openLibrary(){ document.getElementById('libraryModal').style.display='flex'; fetchGitHubFiles(); renderLocalLibrary(); }
         function closeLibraryModal(e){ if(!e||e.target.id==='libraryModal'||e.target.classList.contains('modal-close')) document.getElementById('libraryModal').style.display='none'; }
         function loadAndCloseLibrary(u){ loadGpxFromUrl(u); document.getElementById('libraryModal').style.display='none'; }
-        function createShareLink(){ const u=prompt("Link GPX:"); if(u) {const s=`${window.location.href.split('?')[0]}?gpx=${encodeURIComponent(u)}`; navigator.clipboard.writeText(s).then(()=>alert("Copied!"),()=>prompt("Link:",s));}}
+        function createShareLink(e){ 
+            if(e) e.stopPropagation();
+            closeAllMenus();
+            const u=prompt("Link GPX:"); if(u) {const s=`${window.location.href.split('?')[0]}?gpx=${encodeURIComponent(u)}`; navigator.clipboard.writeText(s).then(()=>alert("Copied!"),()=>prompt("Link:",s));}
+        }
         async function analyzeRouteWithAI(){ if(!currentRouteData)return; document.getElementById('aiModal').style.display='flex'; document.getElementById('aiModalContent').innerHTML='Loading...'; const r=await callGemini(`Ανάλυσε: ${currentRouteData.dist}km, +${currentRouteData.gain}m gain.`); document.getElementById('aiModalContent').innerHTML=r.replace(/\*\*/g,'<b>').replace(/\n/g,'<br>'); }
         function closeAiModal(e){ if(!e||e.target.id==='aiModal'||e.target.classList.contains('modal-close')) document.getElementById('aiModal').style.display='none'; }
         function toggleChat(){ const w=document.getElementById('chatWindow'); w.style.display=w.style.display==='flex'?'none':'flex'; }
