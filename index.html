@@ -2,17 +2,18 @@
 <html lang="el">
 <!-- 
     PARNITHA MAP - AI EDITION
-    VERSION: 1.9 (GPS Button Moved to Right Side & Left Menu)
+    VERSION: 2.0 (Get App Feature & Mobile Fixes)
 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Χάρτης Πάρνηθας - AI Edition v1.9</title>
+    <title>Χάρτης Πάρνηθας - AI Edition v2.0</title>
     
     <!-- PWA SETTINGS -->
     <meta name="theme-color" content="#2e7d32">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Parnitha Map">
     
     <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/a-/ALV-UjUCO8MgQJshwSQ6QbDEBjR4OLVCwN3-3eB3-9L4XwPCvNf2YM4=s265-w265-h265">
     <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/a-/ALV-UjUCO8MgQJshwSQ6QbDEBjR4OLVCwN3-3eB3-9L4XwPCvNf2YM4=s265-w265-h265">
@@ -41,47 +42,9 @@
         .control-btn:active, .dropdown-item:active, .btn-fab:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0.2); }
 
         /* --- RIGHT SIDE FLOATING BUTTONS (FABs) --- */
-        .right-side-container {
-            position: absolute;
-            right: 20px;
-            bottom: 40px; /* Start from bottom */
-            display: flex;
-            flex-direction: column-reverse; /* Stack upwards */
-            gap: 15px;
-            z-index: 1000;
-            pointer-events: none; /* Allow clicks through container gaps */
-        }
-        .right-side-container > * { pointer-events: auto; }
-
-        /* Chat Button */
-        .chat-fab { 
-            width: 60px; height: 60px; border-radius: 50%; 
-            background: #2e7d32; color: white; font-size: 26px; border: 2px solid #fff;
-        }
-        
-        /* Compass Container (Part of stack now or separate) */
-        /* Keeping Compass Separate as it is not a button but a widget */
-        .compass-container {
-            position: absolute; 
-            right: 20px; 
-            bottom: 120px; /* Above Chat (40+60+20) */
-            z-index: 900; 
-            width: 60px; height: 60px;
-            background: linear-gradient(145deg, #ffffff, #e6e6e6);
-            border-radius: 50%;
-            box-shadow: 5px 5px 10px #bfbfbf, -5px -5px 10px #ffffff, inset 0 0 2px rgba(0,0,0,0.1);
-            border: 2px solid #fff;
-            display: flex; justify-content: center; align-items: center; pointer-events: none;
-        }
-
-        /* GPS FAB (New Position) */
         .gps-fab-container {
-            position: absolute;
-            right: 20px;
-            bottom: 200px; /* Above Compass (120+60+20) */
-            z-index: 1000;
+            position: absolute; right: 20px; bottom: 200px; z-index: 1000;
         }
-        
         .btn-gps-fab {
             width: 60px; height: 60px; border-radius: 50%; 
             background: #3498db; color: white; font-size: 24px; border: 2px solid #fff;
@@ -92,37 +55,12 @@
 
         /* GPS LEFT MENU */
         .gps-menu-left {
-            display: none;
-            position: absolute;
-            right: 75px; /* To the left of the button */
-            top: 0;
-            width: 200px;
-            background: white;
-            border-radius: 12px;
-            padding: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            flex-direction: column; gap: 8px;
+            display: none; position: absolute; right: 75px; top: 0; width: 200px;
+            background: white; border-radius: 12px; padding: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); flex-direction: column; gap: 8px;
         }
         .gps-menu-left.show { display: flex; animation: slideInRight 0.2s; }
-        
         @keyframes slideInRight { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
-
-
-        /* Compass Internals */
-        .compass-face { position: relative; width: 100%; height: 100%; border-radius: 50%; }
-        .compass-mark { position: absolute; font-size: 10px; font-weight: bold; color: #555; font-family: 'Arial', sans-serif; }
-        .compass-mark.n { top: 4px; left: 50%; transform: translateX(-50%); color: #e74c3c; }
-        .compass-mark.s { bottom: 4px; left: 50%; transform: translateX(-50%); }
-        .compass-mark.e { right: 5px; top: 50%; transform: translateY(-50%); }
-        .compass-mark.w { left: 5px; top: 50%; transform: translateY(-50%); }
-        .compass-needle {
-            position: absolute; top: 50%; left: 50%; width: 4px; height: 40px; background: transparent;
-            transform-origin: center center; transform: translate(-50%, -50%) rotate(0deg);
-            transition: transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44);
-        }
-        .compass-needle::before { content: ''; position: absolute; top: 0; left: 0; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 20px solid #e74c3c; transform: translate(-2px, -2px); }
-        .compass-needle::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 20px solid #333; transform: translate(-2px, 2px); }
-        .compass-center { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: silver; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 1px 2px rgba(0,0,0,0.3); z-index: 2; }
 
         /* Colors for Top Bar Buttons */
         .control-btn { background: #ffffff; color: #333; border: 1px solid #e0e0e0; border-bottom-color: #bdc3c7; padding: 8px 14px; }
@@ -130,40 +68,56 @@
         .btn-add-point.active { background: #c0392b; border-color: #922b21; box-shadow: 0 4px 0 #641e16; }
         .btn-save-html { background: #16a085; color: white; border-color: #1abc9c; border-bottom-color: #0e6655; box-shadow: 0 4px 0 #0e6655; }
         .btn-share-main { background: #9b59b6; color: white; border-color: #8e44ad; border-bottom-color: #6c3483; box-shadow: 0 4px 0 #6c3483; }
-        .btn-install { background: #2c3e50; color: white; border-color: #34495e; border-bottom-color: #1a252f; box-shadow: 0 4px 0 #1a252f; display: none; }
+        
+        /* GET APP BUTTON STYLE */
+        .btn-install { 
+            background: #2c3e50; color: white; border-color: #34495e; border-bottom-color: #1a252f; box-shadow: 0 4px 0 #1a252f; 
+            display: none; /* Hidden initially, shown by JS */
+        }
+
         .ai-analyze-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; box-shadow: 0 4px 0 #4a3b75; }
 
-        /* Top Share Menu */
+        /* Dropdown Menu */
         .dropdown-container { position: relative; display: inline-block; }
-        .dropdown-menu { display: none; position: absolute; top: 120%; right: 0; background-color: white; min-width: 180px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); z-index: 3000; border-radius: 8px; border: 1px solid #eee; padding: 5px; flex-direction: column; gap: 5px; }
+        .dropdown-menu { 
+            display: none; position: absolute; top: 120%; right: 0; 
+            background-color: white; min-width: 180px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); 
+            z-index: 3000; border-radius: 8px; border: 1px solid #eee; padding: 5px; 
+            flex-direction: column; gap: 5px; 
+            pointer-events: auto; /* Fix for unclickable menu */
+        }
         .dropdown-menu.show { display: flex; }
         .dropdown-item { width: 100%; text-align: left; background: #fff; color: #333; border: 1px solid #eee; border-bottom: 2px solid #ddd; margin-bottom: 2px; padding: 8px; font-weight: bold; }
         .dropdown-item:hover { background-color: #f0f0f0; }
 
         /* CONTROLS & INFO */
-        .info-box { 
-            position: absolute; top: 20px; left: 20px; z-index: 2000; 
-            background: white; padding: 15px; border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15); max-width: 250px; border-bottom: 4px solid #ddd; 
-        }
+        .info-box { position: absolute; top: 20px; left: 20px; z-index: 2000; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); max-width: 250px; border-bottom: 4px solid #ddd; }
         .info-box h2 { margin: 0 0 5px 0; font-size: 16px; color: #2e7d32; text-transform: uppercase; }
         .info-box p { margin: 0; font-size: 11px; color: #666; }
 
-        .controls-box { 
-            position: absolute; top: 20px; right: 20px; z-index: 2000; 
-            display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; 
-            max-width: 65%; pointer-events: none; 
-        }
+        .controls-box { position: absolute; top: 20px; right: 20px; z-index: 2000; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 65%; pointer-events: none; }
         .controls-box > * { pointer-events: auto; }
 
         /* LOGO */
-        .logo-box { 
-            position: absolute; bottom: 30px; left: 20px; z-index: 1500; 
-            width: 150px; height: auto; pointer-events: none; 
-            filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); 
-        }
+        .logo-box { position: absolute; bottom: 30px; left: 20px; z-index: 1500; width: 150px; height: auto; pointer-events: none; filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); }
 
-        /* RECORDING DASHBOARD */
+        /* COMPASS */
+        .compass-container { position: absolute; right: 20px; bottom: 120px; z-index: 900; width: 60px; height: 60px; background: linear-gradient(145deg, #ffffff, #e6e6e6); border-radius: 50%; box-shadow: 5px 5px 10px #bfbfbf, -5px -5px 10px #ffffff, inset 0 0 2px rgba(0,0,0,0.1); border: 2px solid #fff; display: flex; justify-content: center; align-items: center; pointer-events: none; }
+        .compass-face { position: relative; width: 100%; height: 100%; border-radius: 50%; }
+        .compass-mark { position: absolute; font-size: 10px; font-weight: bold; color: #555; font-family: 'Arial', sans-serif; }
+        .compass-mark.n { top: 4px; left: 50%; transform: translateX(-50%); color: #e74c3c; }
+        .compass-mark.s { bottom: 4px; left: 50%; transform: translateX(-50%); }
+        .compass-mark.e { right: 5px; top: 50%; transform: translateY(-50%); }
+        .compass-mark.w { left: 5px; top: 50%; transform: translateY(-50%); }
+        .compass-needle { position: absolute; top: 50%; left: 50%; width: 4px; height: 40px; background: transparent; transform-origin: center center; transform: translate(-50%, -50%) rotate(0deg); transition: transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44); }
+        .compass-needle::before { content: ''; position: absolute; top: 0; left: 0; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 20px solid #e74c3c; transform: translate(-2px, -2px); }
+        .compass-needle::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 20px solid #333; transform: translate(-2px, 2px); }
+        .compass-center { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: silver; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 1px 2px rgba(0,0,0,0.3); z-index: 2; }
+
+        /* CHAT FAB */
+        .chat-fab { width: 60px; height: 60px; border-radius: 50%; background: #2e7d32; color: white; font-size: 26px; border: 2px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; position: absolute; bottom: 40px; right: 20px; z-index: 1000; pointer-events: auto; box-shadow: 0 4px 0 #1e6f2e; }
+
+        /* DASHBOARD */
         .recording-dashboard { display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; background: rgba(255, 255, 255, 0.95); border-radius: 15px; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); z-index: 4000; padding: 15px; flex-direction: column; border-bottom: 5px solid #e74c3c; }
         .rec-stats { display: flex; justify-content: space-between; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 10px; }
         .rec-stat-item { text-align: center; flex: 1; border-right: 1px solid #ddd; }
@@ -179,14 +133,12 @@
         .gps-arrow { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 20px solid #d35400; position: absolute; top: -5px; left: 4px; transform-origin: bottom center; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
         .gps-dot { width: 14px; height: 14px; background: #d35400; border: 2px solid white; border-radius: 50%; position: absolute; top: 12px; left: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
 
-        /* ELEVATION */
+        /* MODALS, CHAT, CHART */
         #elevation-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80%; max-width: 800px; height: 220px; background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 2000; padding: 10px 20px 10px 10px; display: none; flex-direction: column; border-bottom: 4px solid #ddd; }
         .elevation-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #333; }
         .elevation-actions { display: flex; gap: 10px; }
         .close-chart-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: #888; }
         #elevationChart { width: 100% !important; height: 160px !important; }
-
-        /* CHAT */
         .chat-window { position: absolute; bottom: 110px; right: 20px; width: 300px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 3000; display: none; flex-direction: column; overflow: hidden; border: 1px solid #ddd; }
         .chat-header { background: #2e7d32; color: white; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .chat-messages { flex: 1; padding: 10px; overflow-y: auto; background: #f9f9f9; font-size: 13px; }
@@ -197,8 +149,6 @@
         .chat-input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
         .chat-send-btn { background: #2e7d32; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         .typing-indicator { font-style: italic; color: #888; font-size: 12px; display: none; margin: 5px; }
-
-        /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 5000; display: none; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; border-bottom: 5px solid #ddd; }
         .modal-close { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #888; }
@@ -220,45 +170,32 @@
         @media (max-width: 768px) {
             .info-box { top: 10px; left: 10px; padding: 10px; max-width: 140px; z-index: 2000; }
             .info-box h2 { font-size: 13px; margin: 0; } .info-box p { display: none; }
-            .controls-box { top: 60px; left: 10px; right: auto; justify-content: flex-start; max-width: 95%; gap: 8px; z-index: 2000; }
+            
+            .controls-box { 
+                top: 60px; left: 10px; right: auto; justify-content: flex-start; 
+                max-width: 95%; gap: 8px; z-index: 2000; 
+            }
             .control-btn { padding: 10px 12px; font-size: 13px; }
+
             .leaflet-top.leaflet-left { top: auto !important; bottom: 20px !important; left: 20px !important; }
             .leaflet-control-zoom { margin-bottom: 80px; }
+            
             .chat-window { width: 90%; right: 5%; bottom: 100px; height: 50vh; }
+            
             #elevation-container { width: 95%; height: 180px; bottom: 10px; }
             
-            /* Adjust positions for mobile */
-            .gps-fab-container { bottom: 180px; right: 10px; }
+            /* Mobile Compass Position */
             .compass-container { bottom: 110px; right: 10px; width: 50px; height: 50px; }
-            .right-side-container { right: 10px; bottom: 30px; }
+            .gps-fab-container { bottom: 180px; right: 10px; }
             
+            /* Tooltips off on mobile */
             [data-tooltip]:hover::after { display: none; }
         }
         #file-input { display: none; }
     </style>
-    
-    <!-- MANIFEST SCRIPT (Try-Catch) -->
-    <script>
-        try {
-            const manifest = {
-                "name": "Parnitha Map AI",
-                "short_name": "ParnithaMap",
-                "description": "Διαδραστικός χάρτης Πάρνηθας με AI οδηγό",
-                "start_url": ".",
-                "display": "standalone",
-                "background_color": "#f0f2f5",
-                "theme_color": "#2e7d32",
-                "icons": [{ "src": "https://lh3.googleusercontent.com/a-/ALV-UjUCO8MgQJshwSQ6QbDEBjR4OLVCwN3-3eB3-9L4XwPCvNf2YM4=s265-w265-h265", "sizes": "192x192", "type": "image/png" }]
-            };
-            const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-            const link = document.createElement('link');
-            link.rel = 'manifest';
-            link.href = URL.createObjectURL(blob);
-            document.head.appendChild(link);
-        } catch(e) {}
-    </script>
 </head>
 <body>
+
     <div class="info-box">
         <h2>ΕΘΕΛΟΝΤΙΚΗ ΔΡΑΣΗ ΠΑΡΝΗΘΑΣ</h2>
         <p>Χάρτης δράσης ή Πεζοπορικής Διαδρομής</p>
@@ -285,13 +222,15 @@
         <button class="control-btn btn-clear" data-tooltip="Διαγραφή GPX" onclick="clearRoutes()"><i class="fas fa-trash"></i></button>
         <button class="control-btn btn-email" data-tooltip="Επικοινωνία" onclick="window.location.href='mailto:info@drasiparnithas.gr?subject=Επικοινωνία'"><i class="fas fa-envelope"></i></button>
         <button class="control-btn btn-settings" data-tooltip="Ρυθμίσεις" onclick="openSettings()"><i class="fas fa-cog"></i></button>
-        <button id="installBtn" class="control-btn btn-install" onclick="installApp()"><i class="fas fa-download"></i> App</button>
+        
+        <!-- GET APP BUTTON (MOBILE ONLY/PWA) -->
+        <button id="installBtn" class="control-btn btn-install" onclick="installApp()"><i class="fas fa-download"></i> Get App</button>
         
         <input type="file" id="file-input" accept=".gpx" onchange="handleFileSelect(event)">
     </div>
 
     <!-- RIGHT SIDE WIDGETS -->
-    <!-- 1. GPS FAB -->
+    <!-- 1. GPS FAB (Right Side) -->
     <div class="gps-fab-container">
         <button class="btn-fab btn-gps-fab" onclick="toggleGpsMenu(event)">
             <i class="fas fa-satellite-dish"></i>
@@ -311,9 +250,7 @@
     </div>
 
     <!-- 3. CHAT FAB -->
-    <div class="right-side-container">
-        <div class="chat-fab btn-fab" onclick="toggleChat()"><i class="fas fa-tree"></i></div>
-    </div>
+    <div class="chat-fab" onclick="toggleChat()"><i class="fas fa-tree"></i></div>
 
     <!-- RECORDING DASHBOARD -->
     <div id="recordingDashboard" class="recording-dashboard">
@@ -350,7 +287,17 @@
     <!-- Modals -->
     <div class="modal-overlay" id="aiModal" onclick="closeAiModal(event)"><div class="modal-content"><span class="modal-close" onclick="closeAiModal(null)">&times;</span><div class="ai-result-title"><i class="fas fa-robot"></i> Ανάλυση Gemini</div><div id="aiModalContent">Φόρτωση...</div></div></div>
     <div class="modal-overlay" id="libraryModal" onclick="closeLibraryModal(event)"><div class="modal-content"><span class="modal-close" onclick="closeLibraryModal(null)">&times;</span><div class="ai-result-title"><i class="fas fa-book"></i> Βιβλιοθήκη</div><div id="libraryContent"><div style="margin-bottom:15px; font-size:12px; color:#666;">Cloud: GitHub | Local: Τοπικά</div><ul class="library-list" id="githubList"></ul><ul class="library-list" id="localList" style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;"></ul></div></div></div>
-    <div class="modal-overlay" id="settingsModal" onclick="closeSettingsModal(event)"><div class="modal-content"><span class="modal-close" onclick="closeSettingsModal(null)">&times;</span><div class="ai-result-title"><i class="fas fa-cog"></i> Ρυθμίσεις</div><div class="settings-group"><label class="settings-label">Τύπος Χάρτη:</label><div class="radio-group"><label><input type="radio" name="mapType" value="osm" checked> Κλασικός</label><label><input type="radio" name="mapType" value="satellite"> Δορυφορικός</label><label><input type="radio" name="mapType" value="topo"> Τοπογραφικός</label></div></div><div class="settings-group"><label class="settings-label">Χρώμα Γραμμής:</label><div class="radio-group"><label><input type="radio" name="lineColor" value="blue" checked> <span class="color-preview" style="background:#3388ff;"></span></label><label><input type="radio" name="lineColor" value="red"> <span class="color-preview" style="background:#e74c3c;"></span></label><label><input type="radio" name="lineColor" value="#f1c40f"> <span class="color-preview" style="background:#f1c40f;"></span></label></div></div><div class="settings-group"><label class="settings-label">Πάχος Γραμμής:</label><div class="radio-group"><label><input type="radio" name="lineWeight" value="6" checked> Μεγάλο</label><label><input type="radio" name="lineWeight" value="3"> Λεπτό</label></div></div><div class="settings-group"><label class="settings-label">Φάκελος Αποθήκευσης (Όνομα):</label><input type="text" id="folderNameInput" class="settings-input" placeholder="π.χ. ΕΔΠΑ"><div class="settings-help" style="margin-top:2px; font-size:10px; color:#666;">*Τα αρχεία θα αποθηκεύονται στις Λήψεις με αυτό το όνομα στην αρχή (π.χ. ΕΔΠΑ_2023...).</div></div><hr style="margin:15px 0; border:0; border-top:1px solid #eee;"><div class="settings-group"><label class="settings-label">Google API Key:</label><input type="password" id="apiKeyInput" class="settings-input" placeholder="Κλειδί (προαιρετικό)..."></div><button class="settings-save-btn" onclick="saveSettings()">Αποθήκευση</button></div></div>
+    <div class="modal-overlay" id="settingsModal" onclick="closeSettingsModal(event)">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeSettingsModal(null)">&times;</span>
+            <div class="ai-result-title"><i class="fas fa-cog"></i> Ρυθμίσεις</div>
+            <div class="settings-group"><label class="settings-label">Τύπος Χάρτη:</label><div class="radio-group"><label><input type="radio" name="mapType" value="osm" checked> Κλασικός</label><label><input type="radio" name="mapType" value="satellite"> Δορυφορικός</label><label><input type="radio" name="mapType" value="topo"> Τοπογραφικός</label></div></div>
+            <div class="settings-group"><label class="settings-label">Χρώμα Γραμμής:</label><div class="radio-group"><label><input type="radio" name="lineColor" value="blue" checked> <span class="color-preview" style="background:#3388ff;"></span></label><label><input type="radio" name="lineColor" value="red"> <span class="color-preview" style="background:#e74c3c;"></span></label><label><input type="radio" name="lineColor" value="#f1c40f"> <span class="color-preview" style="background:#f1c40f;"></span></label></div></div>
+            <div class="settings-group"><label class="settings-label">Πάχος Γραμμής:</label><div class="radio-group"><label><input type="radio" name="lineWeight" value="6" checked> Μεγάλο</label><label><input type="radio" name="lineWeight" value="3"> Λεπτό</label></div></div>
+            <div class="settings-group"><label class="settings-label">Πρόθεμα Αρχείου (Φάκελος):</label><input type="text" id="folderNameInput" class="settings-input" placeholder="π.χ. ΕΔΠΑ"><div class="settings-help" style="margin-top:2px; font-size:10px; color:#666;">*Τα αρχεία θα αποθηκεύονται στις Λήψεις με αυτό το όνομα στην αρχή (π.χ. ΕΔΠΑ_2023...).</div></div>
+            <hr style="margin:15px 0; border:0; border-top:1px solid #eee;"><div class="settings-group"><label class="settings-label">Google API Key:</label><input type="password" id="apiKeyInput" class="settings-input" placeholder="Κλειδί (προαιρετικό)..."></div><button class="settings-save-btn" onclick="saveSettings()">Αποθήκευση</button>
+        </div>
+    </div>
     <div class="modal-overlay" id="addPointModal" onclick="closeAddPointModal(event)"><div class="modal-content"><span class="modal-close" onclick="closeAddPointModal(null)">&times;</span><div class="ai-result-title"><i class="fas fa-map-marker-alt"></i> Προσθήκη Σημείου</div><div class="settings-group"><label class="settings-label">Τίτλος:</label><input type="text" id="pointTitle" class="settings-input" placeholder="Π.χ. Πηγή Κεραμίδι"></div><div class="settings-group"><label class="settings-label">Περιγραφή:</label><textarea id="pointDesc" class="settings-input" rows="3" placeholder="Π.χ. Πόσιμο νερό, στάση..."></textarea></div><div class="settings-group"><label class="settings-label">Τύπος:</label><select id="pointType" class="settings-input"><option value="general">Γενικό</option><option value="refuge">Καταφύγιο</option><option value="sight">Αξιοθέατο</option><option value="water">Νερό/Πηγή</option><option value="danger">Κίνδυνος</option></select></div><button class="settings-save-btn" onclick="confirmAddPoint()">Προσθήκη στο Χάρτη</button></div></div>
 
     <div id="map"></div>
@@ -401,30 +348,34 @@
         let totalDistance = 0;
         let lastPoint = null;
         
-        // PWA INSTALL LOGIC
+        // PWA INSTALL LOGIC (Updated for Android support via alert)
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        // Always show Get App on mobile to give instructions if prompt fails
+        if (isMobile) {
+            const btn = document.getElementById('installBtn');
+            if(btn) btn.style.display = 'inline-flex';
+        }
+
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             document.getElementById('installBtn').style.display = 'inline-flex';
         });
-
-        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        if (isIos) {
-            const btn = document.getElementById('installBtn');
-            if(btn) btn.style.display = 'inline-flex';
-        }
         
         async function installApp() {
-            if (isIos) {
-                alert("Σε iPhone/iPad: Πατήστε το 'Share' στο browser και επιλέξτε 'Προσθήκη στην Αρχική Οθόνη'.");
-            } else if (deferredPrompt) {
+            if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    document.getElementById('installBtn').style.display = 'none';
-                }
+                if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
                 deferredPrompt = null;
+            } else {
+                // Manual Instructions
+                if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                     alert("Για εγκατάσταση σε iOS:\n1. Πατήστε το κουμπί 'Share' του Safari (κάτω μεσαία).\n2. Επιλέξτε 'Προσθήκη στην Αρχική Οθόνη' (Add to Home Screen).");
+                } else {
+                     alert("Για εγκατάσταση σε Android:\n1. Πατήστε το μενού του Chrome (3 τελείες πάνω δεξιά).\n2. Επιλέξτε 'Εγκατάσταση εφαρμογής' ή 'Προσθήκη στην αρχική οθόνη'.");
+                }
             }
         }
 
@@ -470,7 +421,7 @@
             const menu = document.getElementById('gpsLeftMenu');
             if (menu.classList.contains('show')) menu.classList.remove('show');
             else {
-                closeAllMenus(); // Close top menus
+                closeAllMenus(); 
                 menu.classList.add('show');
             }
         }
@@ -478,7 +429,6 @@
             document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('show')); 
             document.querySelectorAll('.gps-menu-left').forEach(el => el.classList.remove('show')); 
         }
-        // Close menus when clicking map
         window.onclick = function(event) {
             if (!event.target.closest('.dropdown-container') && !event.target.closest('.gps-fab-container')) {
                 closeAllMenus();
@@ -506,7 +456,7 @@
             isRecording = true; isPaused = false; recordedPath = []; totalDistance = 0; lastPoint = null;
             recordLayerGroup.clearLayers(); gpsLayerGroup.clearLayers(); recordingPolyline = null;
             document.getElementById('mainControls').style.display = 'none';
-            document.querySelector('.gps-fab-container').style.display = 'none'; // Hide GPS button during record
+            document.querySelector('.gps-fab-container').style.display = 'none'; 
             document.getElementById('recordingDashboard').style.display = 'flex';
             document.querySelector('.chat-fab').style.display = 'none';
             recStartTime = Date.now(); recPausedTime = 0; updateTimerDisplay();
