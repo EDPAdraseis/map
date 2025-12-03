@@ -2,12 +2,12 @@
 <html lang="el">
 <!-- 
     PARNITHA MAP - AI EDITION
-    VERSION: 2.5 (Fix: Correct 'foot' profile for Hiking)
+    VERSION: 2.7 (OpenRouteService Hiking)
 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Χάρτης Πάρνηθας - AI Edition v2.5</title>
+    <title>Χάρτης Πάρνηθας - AI Edition v2.7</title>
     
     <!-- PWA SETTINGS -->
     <meta name="theme-color" content="#2e7d32">
@@ -93,10 +93,9 @@
         .btn-save-html { background: #16a085; color: white; border-color: #1abc9c; border-bottom-color: #0e6655; box-shadow: 0 4px 0 #0e6655; }
         .btn-share-main { background: #9b59b6; color: white; border-color: #8e44ad; border-bottom-color: #6c3483; box-shadow: 0 4px 0 #6c3483; }
         
-        /* GET APP BUTTON STYLE */
         .btn-install { 
             background: #2c3e50; color: white; border-color: #34495e; border-bottom-color: #1a252f; box-shadow: 0 4px 0 #1a252f; 
-            display: inline-flex;
+            display: inline-flex; 
         }
 
         .ai-analyze-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; box-shadow: 0 4px 0 #4a3b75; }
@@ -133,7 +132,7 @@
         #file-input { display: none; }
         .logo-box { position: absolute; bottom: 30px; left: 20px; z-index: 1500; width: 150px; height: auto; pointer-events: none; filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.8)); }
 
-        /* ROUTING CONTROL HACK (Hide default box, keep functionality) */
+        /* ROUTING CONTROL HACK */
         .leaflet-routing-container { display: none !important; }
 
         /* COMPONENTS */
@@ -302,15 +301,23 @@
     <!-- ROUTE PLANNER DASHBOARD -->
     <div id="planningDashboard" class="recording-dashboard" style="border-bottom: 5px solid #8e44ad;">
         <div style="text-align:center; margin-bottom:10px; color:#8e44ad; font-weight:bold;">🗺️ ΣΧΕΔΙΑΣΜΟΣ ΠΕΖΟΠΟΡΙΑΣ</div>
-        <div style="text-align:center; font-size:12px; color:#666; margin-bottom:10px;">Κάντε κλικ στο χάρτη για να προσθέσετε σημεία</div>
+        <div style="text-align:center; font-size:12px; color:#666; margin-bottom:10px;">
+            Κάντε κλικ για να προσθέσετε σημεία.<br>
+            <span style="color:#d35400;">*Αν κολλάει, χρησιμοποιήστε το Manual.</span>
+        </div>
         <div class="rec-stats">
             <div class="rec-stat-item"><span id="planDist" class="rec-val">0.00</span><span class="rec-label">Χλμ</span></div>
             <div class="rec-stat-item"><span id="planTime" class="rec-val">0λ</span><span class="rec-label">Εκτ. Χρονος</span></div>
         </div>
-        <div class="rec-controls">
-            <button class="rec-btn" style="background:#2ecc71; box-shadow:0 4px 0 #27ae60;" onclick="savePlannedRoute()"><i class="fas fa-save"></i> Αποθηκευση</button>
-            <button class="rec-btn" style="background:#95a5a6; box-shadow:0 4px 0 #7f8c8d;" onclick="resetPlanner()"><i class="fas fa-undo"></i> Καθαρισμος</button>
-            <button class="rec-btn" style="background:#c0392b; box-shadow:0 4px 0 #922b21;" onclick="toggleRoutePlanner()"><i class="fas fa-times"></i> Εξοδος</button>
+        <div class="rec-controls" style="flex-wrap: wrap;">
+            <button class="rec-btn" style="background:#2ecc71; box-shadow:0 4px 0 #27ae60;" onclick="savePlannedRoute()"><i class="fas fa-save"></i> Save</button>
+            
+            <!-- Manual Toggle -->
+            <button id="manualModeBtn" class="rec-btn" style="background:#f39c12; box-shadow:0 4px 0 #d68910;" onclick="toggleManualMode()">✍️ Manual</button>
+            
+            <button class="rec-btn" style="background:#95a5a6; box-shadow:0 4px 0 #7f8c8d;" onclick="undoLastPoint()"><i class="fas fa-undo"></i> Undo</button>
+            
+            <button class="rec-btn" style="background:#c0392b; box-shadow:0 4px 0 #922b21;" onclick="toggleRoutePlanner()"><i class="fas fa-times"></i> Exit</button>
         </div>
     </div>
 
@@ -358,6 +365,7 @@
 
     <script>
         const GLOBAL_API_KEY = "AIzaSyASDnF3E2gmAvv8WY96wg3m3ZkpAntDUU4"; 
+        const ORS_API_KEY = "ΒΑΛΕ_ΕΔΩ_ΤΟ_ORS_API_KEY_SOU";  // OpenRouteService API key
         const STORAGE_KEY = 'parnitha_saved_routes';
         const SETTINGS_KEY = 'parnitha_settings';
         const GITHUB_USER = 'EDPAdraseis';
@@ -379,6 +387,7 @@
         const markersLayerGroup = L.layerGroup().addTo(map);
         const gpsLayerGroup = L.layerGroup().addTo(map);
         const recordLayerGroup = L.layerGroup().addTo(map);
+        const manualRouteLayerGroup = L.layerGroup().addTo(map); // For Manual Mode
 
         let elevationChart = null;
         let currentRouteData = null;
@@ -401,7 +410,69 @@
         let isPlanningRoute = false;
         let routingControl = null;
         let routeWaypoints = [];
+        let isManualMode = false; // Toggle between OSRM and Polyline
+        let manualPolyline = null;
         
+        // OpenRouteService Hiking Router
+        const orsHikingRouter = {
+            route: function(waypoints, callback, context, options) {
+                if (!ORS_API_KEY || ORS_API_KEY === "ΒΑΛΕ_ΕΔΩ_ΤΟ_ORS_API_KEY_SOU") {
+                    callback("Λείπει το ORS_API_KEY", null);
+                    return;
+                }
+
+                if (!waypoints || waypoints.length < 2) {
+                    callback("Χρειάζονται τουλάχιστον 2 σημεία", null);
+                    return;
+                }
+
+                const coords = waypoints.map(wp => [
+                    wp.latLng.lng,
+                    wp.latLng.lat
+                ]);
+
+                fetch("https://api.openrouteservice.org/v2/directions/foot-hiking/geojson", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": ORS_API_KEY
+                    },
+                    body: JSON.stringify({
+                        coordinates: coords
+                    })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.features || !data.features.length) {
+                        callback("Δεν βρέθηκε διαδρομή", null);
+                        return;
+                    }
+
+                    const feat = data.features[0];
+                    const lineCoords = feat.geometry.coordinates.map(c => L.latLng(c[1], c[0]));
+                    const summary = feat.properties.summary;
+
+                    const route = {
+                        name: "Hiking route",
+                        coordinates: lineCoords,
+                        summary: {
+                            totalDistance: summary.distance,   // μέτρα
+                            totalTime: summary.duration        // δευτερόλεπτα
+                        },
+                        inputWaypoints: waypoints,
+                        waypoints: waypoints,
+                        properties: feat.properties || {}
+                    };
+
+                    callback(null, [route]);
+                })
+                .catch(err => {
+                    console.error("ORS error", err);
+                    callback("Σφάλμα ORS", null);
+                });
+            }
+        };
+
         // PWA INSTALL LOGIC
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -499,6 +570,7 @@
                     map.removeControl(routingControl);
                     routingControl = null;
                 }
+                manualRouteLayerGroup.clearLayers();
                 routeWaypoints = [];
             } else {
                 isPlanningRoute = true;
@@ -506,70 +578,151 @@
                 document.getElementById('planningDashboard').style.display = 'flex';
                 map.getContainer().style.cursor = 'crosshair';
                 routeWaypoints = [];
-                
-                routingControl = L.Routing.control({
-                    waypoints: [],
-                    routeWhileDragging: true,
-                    show: false,
-                    createMarker: function(i, wp) {
-                        // Hiking icon for start/end points
-                        return L.marker(wp.latLng, {
-                            draggable: true,
-                            icon: L.divIcon({
-                                className: 'custom-div-icon',
-                                html: `<div style="background-color:#8e44ad;width:20px;height:20px;border-radius:50%;border:2px solid white;display:flex;justify-content:center;align-items:center;color:white;font-size:10px;"><i class="fas fa-hiking"></i></div>`,
-                                iconSize: [20, 20]
-                            })
-                        });
-                    },
-                    lineOptions: {
-                        styles: [{color: '#8e44ad', opacity: 0.8, weight: 6}]
-                    },
-                    // FIX: Use 'foot' profile explicitly (OSRM requires 'foot', not 'walking')
-                    router: L.Routing.osrmv1({
-                        serviceUrl: 'https://router.project-osrm.org/route/v1',
-                        profile: 'foot' 
-                    })
-                }).addTo(map);
-                
-                routingControl.on('routesfound', function(e) {
-                    const routes = e.routes;
-                    const summary = routes[0].summary;
-                    document.getElementById('planDist').innerText = (summary.totalDistance / 1000).toFixed(2);
-                    document.getElementById('planTime').innerText = Math.round(summary.totalTime / 60) + "λ";
+                // Default to Auto
+                isManualMode = false;
+                updatePlannerUI();
+                initRoutingControl();
+            }
+        }
+        
+        function initRoutingControl() {
+            if(routingControl) map.removeControl(routingControl);
+            
+            routingControl = L.Routing.control({
+                waypoints: [],
+                routeWhileDragging: true,
+                show: false,
+                createMarker: function(i, wp) {
+                    return L.marker(wp.latLng, {
+                        draggable: true,
+                        icon: L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style="background-color:#8e44ad;width:20px;height:20px;border-radius:50%;border:2px solid white;display:flex;justify-content:center;align-items:center;color:white;font-size:10px;"><i class="fas fa-hiking"></i></div>`,
+                            iconSize: [20, 20]
+                        })
+                    });
+                },
+                lineOptions: { styles: [{color: '#8e44ad', opacity: 0.9, weight: 6}] },
+                // OpenRouteService Hiking router
+                router: orsHikingRouter
+            }).addTo(map);
+            
+            routingControl.on('routesfound', function(e) {
+                const routes = e.routes;
+                if (!routes || !routes.length) return;
+                const summary = routes[0].summary;
+                document.getElementById('planDist').innerText = (summary.totalDistance / 1000).toFixed(2);
+                document.getElementById('planTime').innerText = Math.round(summary.totalTime / 60) + "λ";
+            });
+        }
+
+        function toggleManualMode() {
+            isManualMode = !isManualMode;
+            updatePlannerUI();
+            
+            if (isManualMode) {
+                if (routingControl) {
+                    map.removeControl(routingControl);
+                    routingControl = null;
+                }
+                // Render current points as polyline
+                renderManualPolyline();
+            } else {
+                manualRouteLayerGroup.clearLayers();
+                initRoutingControl();
+                routingControl.setWaypoints(routeWaypoints);
+            }
+        }
+        
+        function updatePlannerUI() {
+            const btn = document.getElementById('manualModeBtn');
+            if(isManualMode) {
+                btn.innerHTML = '🤖 Auto';
+                btn.style.background = '#3498db';
+            } else {
+                btn.innerHTML = '✍️ Manual';
+                btn.style.background = '#f39c12';
+            }
+        }
+
+        function renderManualPolyline() {
+            manualRouteLayerGroup.clearLayers();
+            if (routeWaypoints.length > 0) {
+                manualPolyline = L.polyline(routeWaypoints, {color: '#8e44ad', weight: 6, dashArray: '10, 10'}).addTo(manualRouteLayerGroup);
+                routeWaypoints.forEach(pt => {
+                     L.marker(pt, {
+                        icon: L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style="background-color:#8e44ad;width:15px;height:15px;border-radius:50%;border:2px solid white;"></div>`,
+                            iconSize: [15, 15]
+                        })
+                    }).addTo(manualRouteLayerGroup);
                 });
+                
+                // Calculate Distance manually
+                let dist = 0;
+                for(let i=0; i<routeWaypoints.length-1; i++) {
+                    dist += map.distance(routeWaypoints[i], routeWaypoints[i+1]);
+                }
+                document.getElementById('planDist').innerText = (dist/1000).toFixed(2);
+                document.getElementById('planTime').innerText = Math.round((dist/1000)/4 * 60) + "λ"; // Approx 4km/h walking
+            }
+        }
+        
+        function undoLastPoint() {
+            if(routeWaypoints.length > 0) {
+                routeWaypoints.pop();
+                if(isManualMode) {
+                    renderManualPolyline();
+                } else {
+                    if (routingControl) routingControl.setWaypoints(routeWaypoints);
+                }
             }
         }
         
         function resetPlanner() {
             routeWaypoints = [];
-            if (routingControl) routingControl.setWaypoints([]);
+            if(isManualMode) manualRouteLayerGroup.clearLayers();
+            else if(routingControl) routingControl.setWaypoints([]);
             document.getElementById('planDist').innerText = "0.00";
             document.getElementById('planTime').innerText = "0λ";
         }
 
         function savePlannedRoute() {
-            if (!routingControl || routeWaypoints.length < 2) {
+            if (routeWaypoints.length < 2) {
                 alert("Παρακαλώ σχεδιάστε μια διαδρομή πρώτα (τουλάχιστον 2 σημεία).");
                 return;
             }
-             const routes = routingControl._routes;
-             if (routes && routes.length > 0) {
-                 const coords = routes[0].coordinates; 
-                 const settings = getSettings();
-                 const folderName = settings.folderName ? settings.folderName.replace(/[^a-z0-9α-ωΑ-Ω]/gi, '_') : 'Plan';
-                 const fileName = `${folderName}_Plan.gpx`;
-                 let gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="ParnithaMap"><trk><name>Planned Route</name><trkseg>`;
-                 coords.forEach(pt => { gpx += `\n<trkpt lat="${pt.lat}" lon="${pt.lng}"></trkpt>`; });
-                 gpx += `\n</trkseg></trk></gpx>`;
-                 const blob = new Blob([gpx], {type: 'application/gpx+xml'});
-                 const url = URL.createObjectURL(blob);
-                 const a = document.createElement('a'); a.href = url; a.download = fileName;
-                 document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                 toggleRoutePlanner(); 
-             } else {
-                 alert("Δεν έχει υπολογιστεί διαδρομή ακόμα.");
-             }
+            
+            let coords = [];
+            
+            if (isManualMode) {
+                // Use direct waypoints
+                coords = routeWaypoints;
+            } else {
+                // Try to get routing geometry from routingControl
+                if (routingControl && routingControl._routes && routingControl._routes.length > 0) {
+                    coords = routingControl._routes[0].coordinates;
+                } else {
+                    // Fallback to waypoints if route calculation failed
+                    coords = routeWaypoints;
+                }
+            }
+            
+            const settings = getSettings();
+            const folderName = settings.folderName ? settings.folderName.replace(/[^a-z0-9α-ωΑ-Ω]/gi, '_') : 'Plan';
+            const fileName = `${folderName}_Plan.gpx`;
+             
+            let gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="ParnithaMap"><trk><name>Planned Route</name><trkseg>`;
+            coords.forEach(pt => { gpx += `\n<trkpt lat="${pt.lat}" lon="${pt.lng}"></trkpt>`; });
+            gpx += `\n</trkseg></trk></gpx>`;
+             
+            const blob = new Blob([gpx], {type: 'application/gpx+xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = fileName;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+             
+            toggleRoutePlanner(); 
         }
 
         function toggleGPS() {
@@ -687,7 +840,11 @@
             } 
             else if (isPlanningRoute) {
                 routeWaypoints.push(e.latlng);
-                routingControl.setWaypoints(routeWaypoints);
+                if(isManualMode) {
+                    renderManualPolyline();
+                } else {
+                    if (routingControl) routingControl.setWaypoints(routeWaypoints);
+                }
             }
         });
 
