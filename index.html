@@ -2,12 +2,12 @@
 <html lang="el">
 <!-- 
     PARNITHA MAP - AI EDITION
-    VERSION: 2.4 (Fix: Walking Profile OSRM)
+    VERSION: 2.5 (Fix: Correct 'foot' profile for Hiking)
 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Χάρτης Πάρνηθας - AI Edition v2.4</title>
+    <title>Χάρτης Πάρνηθας - AI Edition v2.5</title>
     
     <!-- PWA SETTINGS -->
     <meta name="theme-color" content="#2e7d32">
@@ -93,9 +93,10 @@
         .btn-save-html { background: #16a085; color: white; border-color: #1abc9c; border-bottom-color: #0e6655; box-shadow: 0 4px 0 #0e6655; }
         .btn-share-main { background: #9b59b6; color: white; border-color: #8e44ad; border-bottom-color: #6c3483; box-shadow: 0 4px 0 #6c3483; }
         
+        /* GET APP BUTTON STYLE */
         .btn-install { 
             background: #2c3e50; color: white; border-color: #34495e; border-bottom-color: #1a252f; box-shadow: 0 4px 0 #1a252f; 
-            display: inline-flex; /* Force Visible */
+            display: inline-flex;
         }
 
         .ai-analyze-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; box-shadow: 0 4px 0 #4a3b75; }
@@ -524,9 +525,10 @@
                     lineOptions: {
                         styles: [{color: '#8e44ad', opacity: 0.8, weight: 6}]
                     },
+                    // FIX: Use 'foot' profile explicitly (OSRM requires 'foot', not 'walking')
                     router: L.Routing.osrmv1({
                         serviceUrl: 'https://router.project-osrm.org/route/v1',
-                        profile: 'walking' // FIXED: Walking profile for trails
+                        profile: 'foot' 
                     })
                 }).addTo(map);
                 
