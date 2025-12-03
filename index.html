@@ -2,12 +2,12 @@
 <html lang="el">
 <!-- 
     PARNITHA MAP - AI EDITION
-    VERSION: 2.1 (Always Visible Get App Button)
+    VERSION: 2.4 (Fix: Walking Profile OSRM)
 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Χάρτης Πάρνηθας - AI Edition v2.1</title>
+    <title>Χάρτης Πάρνηθας - AI Edition v2.4</title>
     
     <!-- PWA SETTINGS -->
     <meta name="theme-color" content="#2e7d32">
@@ -93,7 +93,6 @@
         .btn-save-html { background: #16a085; color: white; border-color: #1abc9c; border-bottom-color: #0e6655; box-shadow: 0 4px 0 #0e6655; }
         .btn-share-main { background: #9b59b6; color: white; border-color: #8e44ad; border-bottom-color: #6c3483; box-shadow: 0 4px 0 #6c3483; }
         
-        /* GET APP BUTTON STYLE (Always visible now) */
         .btn-install { 
             background: #2c3e50; color: white; border-color: #34495e; border-bottom-color: #1a252f; box-shadow: 0 4px 0 #1a252f; 
             display: inline-flex; /* Force Visible */
@@ -242,8 +241,8 @@
     <div class="controls-box" id="mainControls">
         <button class="control-btn" data-tooltip="Κεντράρισμα" onclick="recenterMap()"><i class="fas fa-home"></i></button>
         
-        <!-- ROUTE PLANNER BUTTON (NEW) -->
-        <button id="planRouteBtn" class="control-btn btn-plan-route" data-tooltip="Σχεδίαση Διαδρομής" onclick="toggleRoutePlanner()">
+        <!-- ROUTE PLANNER BUTTON -->
+        <button id="planRouteBtn" class="control-btn btn-plan-route" data-tooltip="Σχεδίαση Πεζοπορίας" onclick="toggleRoutePlanner()">
             <i class="fas fa-route"></i> Σχεδίαση
         </button>
 
@@ -265,7 +264,7 @@
         <button class="control-btn btn-email" data-tooltip="Επικοινωνία" onclick="window.location.href='mailto:info@drasiparnithas.gr?subject=Επικοινωνία'"><i class="fas fa-envelope"></i></button>
         <button class="control-btn btn-settings" data-tooltip="Ρυθμίσεις" onclick="openSettings()"><i class="fas fa-cog"></i></button>
         
-        <!-- GET APP BUTTON (ALWAYS VISIBLE NOW) -->
+        <!-- GET APP BUTTON -->
         <button id="installBtn" class="control-btn btn-install" onclick="installApp()"><i class="fas fa-download"></i> Get App</button>
         
         <input type="file" id="file-input" accept=".gpx" onchange="handleFileSelect(event)">
@@ -299,9 +298,9 @@
         </div>
     </div>
     
-    <!-- ROUTE PLANNER DASHBOARD (NEW) -->
+    <!-- ROUTE PLANNER DASHBOARD -->
     <div id="planningDashboard" class="recording-dashboard" style="border-bottom: 5px solid #8e44ad;">
-        <div style="text-align:center; margin-bottom:10px; color:#8e44ad; font-weight:bold;">🗺️ ΣΧΕΔΙΑΣΜΟΣ ΔΙΑΔΡΟΜΗΣ</div>
+        <div style="text-align:center; margin-bottom:10px; color:#8e44ad; font-weight:bold;">🗺️ ΣΧΕΔΙΑΣΜΟΣ ΠΕΖΟΠΟΡΙΑΣ</div>
         <div style="text-align:center; font-size:12px; color:#666; margin-bottom:10px;">Κάντε κλικ στο χάρτη για να προσθέσετε σημεία</div>
         <div class="rec-stats">
             <div class="rec-stat-item"><span id="planDist" class="rec-val">0.00</span><span class="rec-label">Χλμ</span></div>
@@ -407,10 +406,14 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // Button is already visible
+            document.getElementById('installBtn').style.display = 'inline-flex';
         });
 
         const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIos) {
+            const btn = document.getElementById('installBtn');
+            if(btn) btn.style.display = 'inline-flex';
+        }
         
         async function installApp() {
             if (isIos) {
@@ -486,7 +489,6 @@
         // --- ROUTE PLANNER ---
         function toggleRoutePlanner() {
             if (isPlanningRoute) {
-                // Close planner
                 isPlanningRoute = false;
                 document.getElementById('planningDashboard').style.display = 'none';
                 document.getElementById('mainControls').style.display = 'flex';
@@ -498,25 +500,24 @@
                 }
                 routeWaypoints = [];
             } else {
-                // Open planner
                 isPlanningRoute = true;
                 document.getElementById('mainControls').style.display = 'none';
                 document.getElementById('planningDashboard').style.display = 'flex';
                 map.getContainer().style.cursor = 'crosshair';
                 routeWaypoints = [];
                 
-                // Initialize empty routing control
                 routingControl = L.Routing.control({
                     waypoints: [],
                     routeWhileDragging: true,
-                    show: false, // Hide default instructions
+                    show: false,
                     createMarker: function(i, wp) {
+                        // Hiking icon for start/end points
                         return L.marker(wp.latLng, {
                             draggable: true,
                             icon: L.divIcon({
                                 className: 'custom-div-icon',
-                                html: `<div style="background-color:#8e44ad;width:15px;height:15px;border-radius:50%;border:2px solid white;"></div>`,
-                                iconSize: [15, 15]
+                                html: `<div style="background-color:#8e44ad;width:20px;height:20px;border-radius:50%;border:2px solid white;display:flex;justify-content:center;align-items:center;color:white;font-size:10px;"><i class="fas fa-hiking"></i></div>`,
+                                iconSize: [20, 20]
                             })
                         });
                     },
@@ -525,11 +526,10 @@
                     },
                     router: L.Routing.osrmv1({
                         serviceUrl: 'https://router.project-osrm.org/route/v1',
-                        profile: 'foot' // Hiking/Walking
+                        profile: 'walking' // FIXED: Walking profile for trails
                     })
                 }).addTo(map);
                 
-                // Update stats when route found
                 routingControl.on('routesfound', function(e) {
                     const routes = e.routes;
                     const summary = routes[0].summary;
@@ -554,21 +554,17 @@
              const routes = routingControl._routes;
              if (routes && routes.length > 0) {
                  const coords = routes[0].coordinates; 
-                 
                  const settings = getSettings();
                  const folderName = settings.folderName ? settings.folderName.replace(/[^a-z0-9α-ωΑ-Ω]/gi, '_') : 'Plan';
                  const fileName = `${folderName}_Plan.gpx`;
-                 
                  let gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="ParnithaMap"><trk><name>Planned Route</name><trkseg>`;
                  coords.forEach(pt => { gpx += `\n<trkpt lat="${pt.lat}" lon="${pt.lng}"></trkpt>`; });
                  gpx += `\n</trkseg></trk></gpx>`;
-                 
                  const blob = new Blob([gpx], {type: 'application/gpx+xml'});
                  const url = URL.createObjectURL(blob);
                  const a = document.createElement('a'); a.href = url; a.download = fileName;
                  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                 
-                 toggleRoutePlanner(); // Close
+                 toggleRoutePlanner(); 
              } else {
                  alert("Δεν έχει υπολογιστεί διαδρομή ακόμα.");
              }
