@@ -2,12 +2,12 @@
 <html lang="el">
 <!-- 
     PARNITHA MAP - AI EDITION
-    VERSION: 2.7 (OpenRouteService Hiking)
+    VERSION: 2.6 (Fixed Walking Profile + Manual Mode + ORS Hiking)
 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Χάρτης Πάρνηθας - AI Edition v2.7</title>
+    <title>Χάρτης Πάρνηθας - AI Edition v2.6</title>
     
     <!-- PWA SETTINGS -->
     <meta name="theme-color" content="#2e7d32">
@@ -365,12 +365,69 @@
 
     <script>
         const GLOBAL_API_KEY = "AIzaSyASDnF3E2gmAvv8WY96wg3m3ZkpAntDUU4"; 
-        const ORS_API_KEY = "ΒΑΛΕ_ΕΔΩ_ΤΟ_ORS_API_KEY_SOU";  // OpenRouteService API key
         const STORAGE_KEY = 'parnitha_saved_routes';
         const SETTINGS_KEY = 'parnitha_settings';
         const GITHUB_USER = 'EDPAdraseis';
         const GITHUB_REPO = 'map';
         var permanentMarkers = [];
+
+        /* OpenRouteService API key και custom router για foot-hiking */
+        const ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjQxMmMxN2IzMzkyMjRmOTc5NDlhODY0MjVlYTNlYjJmIiwiaCI6Im11cm11cjY0In0=";
+
+        const orsHikingRouter = {
+            route: function(waypoints, callback, context, options) {
+                if (!ORS_API_KEY) {
+                    callback("Missing ORS API key", null);
+                    return;
+                }
+                if (!waypoints || waypoints.length < 2) {
+                    callback("Need at least two waypoints", null);
+                    return;
+                }
+
+                const coords = waypoints.map(wp => {
+                    const ll = wp.latLng || wp;
+                    return [ll.lng, ll.lat];
+                });
+
+                fetch("https://api.openrouteservice.org/v2/directions/foot-hiking/geojson", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": ORS_API_KEY
+                    },
+                    body: JSON.stringify({ coordinates: coords })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.features || !data.features.length) {
+                        callback("No route found", null);
+                        return;
+                    }
+
+                    const feat = data.features[0];
+                    const lineCoords = feat.geometry.coordinates.map(c => L.latLng(c[1], c[0]));
+                    const summary = feat.properties.summary;
+
+                    const route = {
+                        name: "Hiking Route",
+                        coordinates: lineCoords,
+                        summary: {
+                            totalDistance: summary.distance,
+                            totalTime: summary.duration
+                        },
+                        inputWaypoints: waypoints,
+                        waypoints: waypoints
+                    };
+
+                    callback(null, [route]);
+                })
+                .catch(err => {
+                    console.error("ORS error", err);
+                    callback("ORS error", null);
+                });
+            }
+        };
 
         const layers = {
             osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }),
@@ -410,69 +467,9 @@
         let isPlanningRoute = false;
         let routingControl = null;
         let routeWaypoints = [];
-        let isManualMode = false; // Toggle between OSRM and Polyline
+        let isManualMode = false; // Toggle between ORS και Polyline
         let manualPolyline = null;
         
-        // OpenRouteService Hiking Router
-        const orsHikingRouter = {
-            route: function(waypoints, callback, context, options) {
-                if (!ORS_API_KEY || ORS_API_KEY === "ΒΑΛΕ_ΕΔΩ_ΤΟ_ORS_API_KEY_SOU") {
-                    callback("Λείπει το ORS_API_KEY", null);
-                    return;
-                }
-
-                if (!waypoints || waypoints.length < 2) {
-                    callback("Χρειάζονται τουλάχιστον 2 σημεία", null);
-                    return;
-                }
-
-                const coords = waypoints.map(wp => [
-                    wp.latLng.lng,
-                    wp.latLng.lat
-                ]);
-
-                fetch("https://api.openrouteservice.org/v2/directions/foot-hiking/geojson", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": ORS_API_KEY
-                    },
-                    body: JSON.stringify({
-                        coordinates: coords
-                    })
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (!data.features || !data.features.length) {
-                        callback("Δεν βρέθηκε διαδρομή", null);
-                        return;
-                    }
-
-                    const feat = data.features[0];
-                    const lineCoords = feat.geometry.coordinates.map(c => L.latLng(c[1], c[0]));
-                    const summary = feat.properties.summary;
-
-                    const route = {
-                        name: "Hiking route",
-                        coordinates: lineCoords,
-                        summary: {
-                            totalDistance: summary.distance,   // μέτρα
-                            totalTime: summary.duration        // δευτερόλεπτα
-                        },
-                        inputWaypoints: waypoints,
-                        waypoints: waypoints,
-                        properties: feat.properties || {}
-                    };
-
-                    callback(null, [route]);
-                })
-                .catch(err => {
-                    console.error("ORS error", err);
-                    callback("Σφάλμα ORS", null);
-                });
-            }
-        };
-
         // PWA INSTALL LOGIC
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -498,7 +495,7 @@
                 }
                 deferredPrompt = null;
             } else {
-                 alert("Για εγκατάσταση σε PC/Laptop:\nΚοιτάξτε στη δεξιά πλευρά της γραμμής διευθύνσεων του browser για το εικονίδιο εγκατάστασης (⊕) ή στο μενού ρυθμίσεων.\n\nΣε Android:\nΠατήστε το μενού του Chrome (3 τελείες) και επιλέξτε 'Εγκατάσταση εφαρμογής'.");
+                 alert("Για εγκατάσταση σε PC ή Laptop:\nΚοιτάξτε στη δεξιά πλευρά της γραμμής διευθύνσεων του browser για το εικονίδιο εγκατάστασης (⊕) ή στο μενού ρυθμίσεων.\n\nΣε Android:\nΠατήστε το μενού του Chrome (3 τελείες) και επιλέξτε 'Εγκατάσταση εφαρμογής'.");
             }
         }
 
@@ -572,13 +569,15 @@
                 }
                 manualRouteLayerGroup.clearLayers();
                 routeWaypoints = [];
+                document.getElementById('planDist').innerText = "0.00";
+                document.getElementById('planTime').innerText = "0λ";
             } else {
                 isPlanningRoute = true;
                 document.getElementById('mainControls').style.display = 'none';
                 document.getElementById('planningDashboard').style.display = 'flex';
                 map.getContainer().style.cursor = 'crosshair';
                 routeWaypoints = [];
-                // Default to Auto
+                // Default Auto, με ORS hiking
                 isManualMode = false;
                 updatePlannerUI();
                 initRoutingControl();
@@ -586,11 +585,13 @@
         }
         
         function initRoutingControl() {
-            if(routingControl) map.removeControl(routingControl);
+            if (routingControl) {
+                map.removeControl(routingControl);
+            }
             
             routingControl = L.Routing.control({
                 waypoints: [],
-                routeWhileDragging: true,
+                routeWhileDragging: false,
                 show: false,
                 createMarker: function(i, wp) {
                     return L.marker(wp.latLng, {
@@ -603,14 +604,11 @@
                     });
                 },
                 lineOptions: { styles: [{color: '#8e44ad', opacity: 0.9, weight: 6}] },
-                // OpenRouteService Hiking router
                 router: orsHikingRouter
             }).addTo(map);
             
             routingControl.on('routesfound', function(e) {
-                const routes = e.routes;
-                if (!routes || !routes.length) return;
-                const summary = routes[0].summary;
+                const summary = e.routes[0].summary;
                 document.getElementById('planDist').innerText = (summary.totalDistance / 1000).toFixed(2);
                 document.getElementById('planTime').innerText = Math.round(summary.totalTime / 60) + "λ";
             });
@@ -674,8 +672,8 @@
                 routeWaypoints.pop();
                 if(isManualMode) {
                     renderManualPolyline();
-                } else {
-                    if (routingControl) routingControl.setWaypoints(routeWaypoints);
+                } else if (routingControl) {
+                    routingControl.setWaypoints(routeWaypoints);
                 }
             }
         }
@@ -700,7 +698,7 @@
                 // Use direct waypoints
                 coords = routeWaypoints;
             } else {
-                // Try to get routing geometry from routingControl
+                // Try to get ORS geometry
                 if (routingControl && routingControl._routes && routingControl._routes.length > 0) {
                     coords = routingControl._routes[0].coordinates;
                 } else {
@@ -709,20 +707,20 @@
                 }
             }
             
-            const settings = getSettings();
-            const folderName = settings.folderName ? settings.folderName.replace(/[^a-z0-9α-ωΑ-Ω]/gi, '_') : 'Plan';
-            const fileName = `${folderName}_Plan.gpx`;
+             const settings = getSettings();
+             const folderName = settings.folderName ? settings.folderName.replace(/[^a-z0-9α-ωΑ-Ω]/gi, '_') : 'Plan';
+             const fileName = `${folderName}_Plan.gpx`;
              
-            let gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="ParnithaMap"><trk><name>Planned Route</name><trkseg>`;
-            coords.forEach(pt => { gpx += `\n<trkpt lat="${pt.lat}" lon="${pt.lng}"></trkpt>`; });
-            gpx += `\n</trkseg></trk></gpx>`;
+             let gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="ParnithaMap"><trk><name>Planned Route</name><trkseg>`;
+             coords.forEach(pt => { gpx += `\n<trkpt lat="${pt.lat}" lon="${pt.lng}"></trkpt>`; });
+             gpx += `\n</trkseg></trk></gpx>`;
              
-            const blob = new Blob([gpx], {type: 'application/gpx+xml'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = fileName;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+             const blob = new Blob([gpx], {type: 'application/gpx+xml'});
+             const url = URL.createObjectURL(blob);
+             const a = document.createElement('a'); a.href = url; a.download = fileName;
+             document.body.appendChild(a); a.click(); document.body.removeChild(a);
              
-            toggleRoutePlanner(); 
+             toggleRoutePlanner(); 
         }
 
         function toggleGPS() {
@@ -842,8 +840,8 @@
                 routeWaypoints.push(e.latlng);
                 if(isManualMode) {
                     renderManualPolyline();
-                } else {
-                    if (routingControl) routingControl.setWaypoints(routeWaypoints);
+                } else if (routingControl) {
+                    routingControl.setWaypoints(routeWaypoints);
                 }
             }
         });
