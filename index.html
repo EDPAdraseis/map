@@ -1,457 +1,493 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Χάρτης Πάρνηθας - Route Planner (ORS Hiking)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <title>Χάρτης Πάρνηθας, Route Planner (ORS Hiking)</title>
 
-  <!-- Leaflet + Routing Machine -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-
   <style>
-    html, body { height:100%; margin:0; font-family: Arial, sans-serif; }
-    #map { height:100%; width:100%; }
-
-    .controls {
-      position:absolute; top:12px; right:12px; z-index:2000;
-      display:flex; gap:8px; flex-wrap:wrap;
-      background: rgba(255,255,255,0.92); padding:10px; border-radius:12px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-    }
-    .btn {
-      border:0; border-radius:10px; padding:10px 12px; cursor:pointer;
-      font-weight:700; font-size:13px;
-      box-shadow: 0 3px 0 rgba(0,0,0,0.20);
-      background:#f2f2f2;
-    }
-    .btn:active { transform: translateY(3px); box-shadow: 0 0 0 rgba(0,0,0,0.20); }
-    .btn.primary { background:#8e44ad; color:#fff; }
-    .btn.warn { background:#f39c12; color:#111; }
-    .btn.danger { background:#c0392b; color:#fff; }
-    .btn.good { background:#2ecc71; color:#0b2a16; }
-    .badge {
-      position:absolute; top:12px; left:12px; z-index:2000;
-      background: rgba(255,255,255,0.92); padding:10px 12px; border-radius:12px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    html, body { height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    #map { height:100%; width:100%; background:#e5e5e5; }
+    .panel {
+      position:absolute; top:16px; left:16px; z-index:2000;
+      background:rgba(255,255,255,0.96); border-radius:14px; padding:12px 12px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.18); border:1px solid rgba(0,0,0,0.06);
       max-width: 320px;
     }
-    .badge h2 { margin:0; font-size:14px; color:#2e7d32; letter-spacing:0.2px; }
-    .badge p { margin:4px 0 0 0; font-size:12px; color:#555; }
-
-    .planner {
-      position:absolute; left:50%; bottom:18px; transform: translateX(-50%);
-      z-index:2500;
-      width: min(760px, 92vw);
-      background: rgba(255,255,255,0.96);
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.20);
-      padding: 14px;
-      display:none;
-      border-bottom: 6px solid #8e44ad;
+    .panel h1 { font-size:14px; margin:0 0 6px 0; color:#2e7d32; letter-spacing:0.3px; }
+    .panel .sub { font-size:12px; color:#555; margin:0 0 8px 0; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    button {
+      border:0; border-radius:10px; padding:10px 12px; font-weight:700; cursor:pointer;
+      background:#fff; box-shadow:0 4px 0 rgba(0,0,0,0.15); transform:translateY(0);
+      border:1px solid rgba(0,0,0,0.08);
     }
-    .planner .title { font-weight:900; color:#8e44ad; text-align:center; }
-    .planner .sub { text-align:center; font-size:12px; color:#666; margin-top:6px; }
-    .planner .stats {
-      display:flex; gap:14px; justify-content:center; margin-top:12px; flex-wrap:wrap;
-      background:#f5f5f7; border-radius:12px; padding:10px;
-    }
-    .stat { min-width:140px; text-align:center; }
-    .stat .val { font-size:20px; font-weight:900; }
-    .stat .lbl { font-size:11px; color:#666; margin-top:2px; text-transform:uppercase; }
+    button:active { transform:translateY(4px); box-shadow:0 0 0 rgba(0,0,0,0.15); }
+    .btn-primary { background:#8e44ad; color:#fff; border-color:#6f2b8c; box-shadow:0 4px 0 #5b2c6f; }
+    .btn-warn { background:#f39c12; color:#111; border-color:#d68910; box-shadow:0 4px 0 #b9770e; }
+    .btn-danger { background:#c0392b; color:#fff; border-color:#922b21; box-shadow:0 4px 0 #7b241c; }
+    .btn-ok { background:#2ecc71; color:#111; border-color:#27ae60; box-shadow:0 4px 0 #1e8449; }
+    .stat { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-weight:800; }
+    .small { font-size:12px; color:#444; }
+    .hint { font-size:12px; color:#666; margin-top:6px; }
+    .divider { height:1px; background:rgba(0,0,0,0.08); margin:10px 0; }
 
-    .planner .actions {
-      display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap:wrap;
+    .fab {
+      position:absolute; right:16px; bottom:18px; z-index:2500;
+      width:58px; height:58px; border-radius:50%;
+      background:#3498db; color:#fff; font-size:20px;
+      display:flex; align-items:center; justify-content:center;
+      border:2px solid rgba(255,255,255,0.9);
+      box-shadow:0 10px 20px rgba(0,0,0,0.25);
+      cursor:pointer;
+      user-select:none;
     }
+    .fab.active { background:#2ecc71; }
+    .fab.searching { background:#f39c12; animation:pulse 1.2s infinite; }
+    @keyframes pulse { 0%{ transform:scale(1); } 50%{ transform:scale(1.05); } 100%{ transform:scale(1); } }
 
-    /* hide the default routing panel */
+    .compass {
+      position:absolute; right:18px; bottom:92px; z-index:2400;
+      width:54px; height:54px; border-radius:50%;
+      background:rgba(255,255,255,0.92);
+      box-shadow:0 10px 20px rgba(0,0,0,0.18);
+      border:1px solid rgba(0,0,0,0.08);
+      display:flex; align-items:center; justify-content:center;
+      pointer-events:none;
+    }
+    .needle {
+      width:4px; height:34px; position:relative;
+      transform-origin:center center;
+      transform:rotate(0deg);
+    }
+    .needle:before {
+      content:""; position:absolute; top:0; left:-2px;
+      width:0; height:0; border-left:4px solid transparent; border-right:4px solid transparent; border-bottom:16px solid #e74c3c;
+    }
+    .needle:after {
+      content:""; position:absolute; bottom:0; left:-2px;
+      width:0; height:0; border-left:4px solid transparent; border-right:4px solid transparent; border-top:16px solid #333;
+    }
+    .compass .dot { width:8px; height:8px; background:silver; border-radius:50%; position:absolute; }
+    .file { display:none; }
+
+    /* Hide LRM UI panel, keep only polyline */
     .leaflet-routing-container { display:none !important; }
 
     @media (max-width: 640px) {
-      .controls { left:12px; right:auto; max-width: 92vw; }
-      .badge { max-width: 70vw; }
+      .panel { max-width: calc(100% - 32px); }
     }
   </style>
 </head>
 <body>
-  <div class="badge">
-    <h2>ΕΘΕΛΟΝΤΙΚΗ ΔΡΑΣΗ ΠΑΡΝΗΘΑΣ</h2>
-    <p>Σχεδίαση διαδρομής πάνω σε μονοπάτια με ORS (foot-hiking).</p>
-  </div>
-
-  <div class="controls">
-    <button class="btn" id="homeBtn">Home</button>
-    <button class="btn primary" id="planBtn">Σχεδίαση</button>
-    <button class="btn" id="undoBtn" disabled>Undo</button>
-    <button class="btn warn" id="modeBtn" disabled>✍️ Manual</button>
-    <button class="btn good" id="saveBtn" disabled>Save GPX</button>
-    <button class="btn danger" id="exitBtn" disabled>Exit</button>
-  </div>
-
-  <div class="planner" id="planner">
-    <div class="title">🗺️ ΣΧΕΔΙΑΣΜΟΣ ΠΕΖΟΠΟΡΙΑΣ</div>
-    <div class="sub">
-      Κλικ για να προσθέσεις σημεία.<br>
-      Αν δεν βρίσκει μονοπάτι (ORS), πάτα Manual.
-    </div>
-
-    <div class="stats">
-      <div class="stat"><div class="val" id="distVal">0.00</div><div class="lbl">ΧΛΜ</div></div>
-      <div class="stat"><div class="val" id="timeVal">0λ</div><div class="lbl">ΕΚΤ. ΧΡΟΝΟΣ</div></div>
-    </div>
-
-    <div class="actions">
-      <button class="btn good" id="saveBtn2">Save GPX</button>
-      <button class="btn warn" id="modeBtn2">✍️ Manual</button>
-      <button class="btn" id="undoBtn2">Undo</button>
-      <button class="btn danger" id="exitBtn2">Exit</button>
-    </div>
-  </div>
-
   <div id="map"></div>
+
+  <div class="panel">
+    <h1>ΕΘΕΛΟΝΤΙΚΗ ΔΡΑΣΗ ΠΑΡΝΗΘΑΣ</h1>
+    <div class="sub">Σχεδίαση διαδρομής όπως Wikiloc, προσθέτεις σημεία και βρίσκει το πιο σύντομο μονοπάτι.</div>
+
+    <div class="row">
+      <button id="btnPlan" class="btn-primary" type="button">Σχεδίαση</button>
+      <button id="btnUndo" type="button">Undo</button>
+      <button id="btnClear" class="btn-danger" type="button">Clear</button>
+      <button id="btnManual" class="btn-warn" type="button">Manual: OFF</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="row small">
+      <div>Απόσταση: <span id="dist" class="stat">0.00</span> km</div>
+      <div style="margin-left:auto;">Χρόνος: <span id="time" class="stat">0</span> min</div>
+    </div>
+
+    <div class="hint">
+      Tip: Σε Auto (ORS) κάνε 2 κλικ, θα ενώσει τα σημεία με μονοπάτι. Αν αποτύχει (π.χ. key), γύρνα Manual.
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="row">
+      <button id="btnSaveGpx" class="btn-ok" type="button">Save GPX</button>
+      <button id="btnLoadGpx" type="button">Load GPX</button>
+      <input id="file" class="file" type="file" accept=".gpx" />
+    </div>
+
+    <div class="hint small" style="margin-top:8px;">
+      ORS key: <span id="orsState" class="stat">OK</span>
+    </div>
+  </div>
+
+  <div id="gpsFab" class="fab" title="GPS">◎</div>
+  <div class="compass" aria-hidden="true">
+    <div id="needle" class="needle"></div>
+    <div class="dot"></div>
+  </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
 
   <script>
-    // =========================
-    // 1) ORS KEY (ΤΟ "ΚΕΛΙΔΙ" ΣΟΥ)
-    // =========================
-    const ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjQxMmMxN2IzMzkyMjRmOTc5NDlhODY0MjVlYTNlYjJmIiwiaCI6Im11cm11cjY0In0=";
+    // 1) Βάλε εδώ το ORS token που μου έδωσες (base64 json). Αν έχεις κανονικό ORS API key, βάλε το απευθείας.
+    const ORS_TOKEN = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjQxMmMxN2IzMzkyMjRmOTc5NDlhODY0MjVlYTNlYjJmIiwiaCI6Im11cm11cjY0In0=";
 
-    // =========================
-    // 2) MAP SETUP
-    // =========================
-    const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "© OpenStreetMap"
-    });
-
-    const topo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-      maxZoom: 17,
-      attribution: "© OpenTopoMap, © OpenStreetMap"
-    });
-
-    const map = L.map("map", { zoomControl: true, layers: [osm] }).setView([38.168, 23.722], 14);
-    L.control.layers({ "OSM": osm, "Topo": topo }).addTo(map);
-
-    // =========================
-    // 3) ROUTE PLANNER STATE
-    // =========================
-    let isPlanning = false;
-    let isManualMode = false;
-    let routeWaypoints = [];
-    let manualLayer = L.layerGroup().addTo(map);
-    let manualLine = null;
-
-    // Leaflet Routing Machine control (for ORS mode)
-    let routingControl = null;
-
-    // =========================
-    // 4) CUSTOM ORS ROUTER FOR LRM
-    //    Calls ORS v2 directions (foot-hiking) and returns a route geometry.
-    // =========================
-    function createOrsRouter() {
-      return L.Class.extend({
-        options: {},
-        initialize: function() {},
-
-        route: function(waypoints, callback, context, options) {
-          // Need at least 2 points
-          if (!waypoints || waypoints.length < 2) {
-            callback.call(context, null, []);
-            return;
-          }
-
-          // ORS expects [lon, lat]
-          const coords = waypoints.map(wp => [wp.latLng.lng, wp.latLng.lat]);
-
-          fetch("https://api.openrouteservice.org/v2/directions/foot-hiking/geojson", {
-            method: "POST",
-            headers: {
-              "Authorization": ORS_API_KEY,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              coordinates: coords,
-              instructions: false
-            })
-          })
-          .then(async (res) => {
-            if (!res.ok) {
-              const txt = await res.text().catch(() => "");
-              throw new Error("ORS error: " + res.status + " " + txt);
-            }
-            return res.json();
-          })
-          .then((geojson) => {
-            const feat = geojson && geojson.features && geojson.features[0];
-            if (!feat || !feat.geometry || !feat.geometry.coordinates) {
-              throw new Error("ORS: no geometry");
-            }
-
-            const line = feat.geometry.coordinates.map(c => L.latLng(c[1], c[0]));
-            const seg = (feat.properties && feat.properties.segments && feat.properties.segments[0]) || null;
-
-            // ORS summary
-            const distM = seg && seg.distance ? seg.distance : (feat.properties && feat.properties.summary && feat.properties.summary.distance) || 0;
-            const timeS = seg && seg.duration ? seg.duration : (feat.properties && feat.properties.summary && feat.properties.summary.duration) || 0;
-
-            const route = {
-              name: "ORS Hiking",
-              coordinates: line,
-              summary: { totalDistance: distM, totalTime: timeS },
-              inputWaypoints: waypoints,
-              waypoints: waypoints
-            };
-
-            callback.call(context, null, [route]);
-          })
-          .catch((err) => {
-            // If ORS fails, return empty so UI doesn't "freeze"
-            console.error(err);
-            callback.call(context, err, []);
-          });
+    function getOrsKey() {
+      const raw = (ORS_TOKEN || "").trim();
+      if (!raw) return "";
+      try {
+        // base64 json with field id
+        if (/^[A-Za-z0-9+/=]+$/.test(raw) && raw.length > 40) {
+          const obj = JSON.parse(atob(raw));
+          if (obj && typeof obj.id === "string" && obj.id.length >= 20) return obj.id;
         }
-      });
+      } catch(e) {}
+      return raw;
     }
 
-    function initRoutingControl() {
+    const ORS_KEY = getOrsKey();
+    document.getElementById("orsState").textContent = ORS_KEY ? "OK" : "MISSING";
+
+    // 2) Map
+    const map = L.map("map", { zoomControl: true }).setView([38.168, 23.722], 14);
+    const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
+    const topo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", { maxZoom: 17, attribution: "© OpenTopoMap" });
+    const sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Tiles © Esri" });
+    L.control.layers({ OSM: osm, Topo: topo, Satellite: sat }).addTo(map);
+
+    // 3) GPS + Compass
+    const gpsFab = document.getElementById("gpsFab");
+    let gpsActive = false;
+    let firstFix = false;
+    const gpsLayer = L.layerGroup().addTo(map);
+
+    function setFabState(state) {
+      gpsFab.classList.remove("active");
+      gpsFab.classList.remove("searching");
+      if (state === "active") gpsFab.classList.add("active");
+      if (state === "searching") gpsFab.classList.add("searching");
+    }
+
+    gpsFab.addEventListener("click", () => {
+      if (gpsActive) {
+        gpsActive = false;
+        firstFix = false;
+        setFabState("off");
+        map.stopLocate();
+        gpsLayer.clearLayers();
+        return;
+      }
+      gpsActive = true;
+      setFabState("searching");
+      requestOrientationPermission();
+      map.locate({ watch: true, enableHighAccuracy: true, timeout: 30000, maximumAge: 10000 });
+    });
+
+    map.on("locationfound", (e) => {
+      setFabState("active");
+      gpsLayer.clearLayers();
+      const heading = (typeof e.heading === "number" && isFinite(e.heading)) ? e.heading : 0;
+      const icon = L.divIcon({
+        className: "gps-icon",
+        html: `
+          <div style="position:relative;width:26px;height:26px;">
+            <div style="position:absolute;left:5px;top:-3px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:20px solid #d35400;transform-origin:bottom center;transform:rotate(${heading}deg);filter:drop-shadow(0 2px 2px rgba(0,0,0,0.35));"></div>
+            <div style="position:absolute;left:6px;top:11px;width:14px;height:14px;background:#d35400;border:2px solid #fff;border-radius:50%;box-shadow:0 0 5px rgba(0,0,0,0.35);"></div>
+          </div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+      });
+      const m = L.marker(e.latlng, { icon }).addTo(gpsLayer).bindPopup("Εσείς");
+      if (!firstFix) {
+        map.setView(e.latlng, 16);
+        m.openPopup();
+        firstFix = true;
+      }
+    });
+
+    map.on("locationerror", (e) => {
+      gpsActive = false;
+      setFabState("off");
+      map.stopLocate();
+      gpsLayer.clearLayers();
+      let msg = "Δεν βρέθηκε τοποθεσία.";
+      if (e && e.code === 1) msg = "Δεν δώσατε άδεια για το GPS.";
+      if (e && e.code === 2) msg = "Αδύνατο σήμα GPS.";
+      if (e && e.code === 3) msg = "Timeout στο GPS.";
+      alert(msg);
+    });
+
+    // Compass needle
+    const needle = document.getElementById("needle");
+    function handleOrientation(ev) {
+      let heading = null;
+      if (typeof ev.webkitCompassHeading === "number") heading = ev.webkitCompassHeading;
+      else if (typeof ev.alpha === "number") heading = 360 - ev.alpha;
+      if (heading !== null) needle.style.transform = "rotate(" + (-heading) + "deg)";
+    }
+    function requestOrientationPermission() {
+      if (!window.DeviceOrientationEvent) return;
+      if (typeof DeviceOrientationEvent.requestPermission === "function") {
+        DeviceOrientationEvent.requestPermission().then((state) => {
+          if (state === "granted") window.addEventListener("deviceorientation", handleOrientation, true);
+        }).catch(() => {});
+      } else {
+        window.addEventListener("deviceorientation", handleOrientation, true);
+      }
+    }
+
+    // 4) ORS Router for Leaflet Routing Machine
+    const ORSRouter = L.Class.extend({
+      route: function(waypoints, callback, context) {
+        if (!ORS_KEY) {
+          callback.call(context, new Error("Missing ORS key"), []);
+          return;
+        }
+        if (!waypoints || waypoints.length < 2) {
+          callback.call(context, null, []);
+          return;
+        }
+
+        const coords = waypoints.map(wp => [wp.latLng.lng, wp.latLng.lat]); // lon,lat
+
+        fetch("https://api.openrouteservice.org/v2/directions/foot-hiking/geojson", {
+          method: "POST",
+          headers: { "Authorization": ORS_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coordinates: coords,
+            instructions: false,
+            preference: "shortest"
+          })
+        })
+        .then(async (res) => {
+          if (!res.ok) throw new Error("ORS " + res.status + " " + (await res.text().catch(()=> "")));
+          return res.json();
+        })
+        .then((geo) => {
+          const feat = geo && geo.features && geo.features[0];
+          const line = feat && feat.geometry && feat.geometry.coordinates;
+          if (!line || line.length < 2) throw new Error("ORS: no geometry");
+
+          const latlngs = line.map(c => L.latLng(c[1], c[0]));
+          const sum = (feat.properties && feat.properties.summary) || {};
+          const dist = sum.distance || 0;
+          const dur = sum.duration || 0;
+
+          const route = {
+            name: "ORS Hiking",
+            coordinates: latlngs,
+            summary: { totalDistance: dist, totalTime: dur },
+            inputWaypoints: waypoints,
+            waypoints: waypoints
+          };
+          callback.call(context, null, [route]);
+        })
+        .catch((err) => {
+          callback.call(context, err, []);
+        });
+      }
+    });
+
+    // 5) Planner state
+    let planning = false;
+    let manual = false;
+    let routeWaypoints = [];          // LatLng[]
+    let routeLineLatLngs = [];        // Actual line (ORS or manual)
+    let routingControl = null;
+    const manualLayer = L.layerGroup().addTo(map);
+
+    const btnPlan = document.getElementById("btnPlan");
+    const btnUndo = document.getElementById("btnUndo");
+    const btnClear = document.getElementById("btnClear");
+    const btnManual = document.getElementById("btnManual");
+    const btnSaveGpx = document.getElementById("btnSaveGpx");
+    const btnLoadGpx = document.getElementById("btnLoadGpx");
+    const file = document.getElementById("file");
+
+    const distEl = document.getElementById("dist");
+    const timeEl = document.getElementById("time");
+
+    function setStats(distMeters, durSeconds) {
+      distEl.textContent = (distMeters / 1000).toFixed(2);
+      timeEl.textContent = Math.max(0, Math.round(durSeconds / 60));
+    }
+
+    function clearPlanner() {
+      routeWaypoints = [];
+      routeLineLatLngs = [];
+      setStats(0, 0);
+      manualLayer.clearLayers();
       if (routingControl) {
         map.removeControl(routingControl);
         routingControl = null;
       }
+      if (planning && !manual) initRouting();
+    }
 
-      const OrsRouterClass = createOrsRouter();
-      const orsRouter = new OrsRouterClass();
+    function initRouting() {
+      if (routingControl) map.removeControl(routingControl);
 
       routingControl = L.Routing.control({
         waypoints: [],
-        show: false,
-        routeWhileDragging: false,
         addWaypoints: false,
-        draggableWaypoints: false,
-        fitSelectedRoutes: false,
-        lineOptions: { styles: [{ color: "#8e44ad", opacity: 0.9, weight: 6 }] },
+        routeWhileDragging: true,
+        draggableWaypoints: true,
+        show: false,
+        lineOptions: { styles: [{ color: "#ff8c00", opacity: 0.9, weight: 7 }] },
         createMarker: function(i, wp) {
           return L.marker(wp.latLng, {
-            draggable: false,
+            draggable: true,
             icon: L.divIcon({
-              className: "custom-div-icon",
-              html: '<div style="background:#8e44ad;width:18px;height:18px;border-radius:50%;border:2px solid #fff;"></div>',
+              className: "wp",
+              html: '<div style="width:18px;height:18px;border-radius:50%;background:#8e44ad;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.25);"></div>',
               iconSize: [18, 18],
               iconAnchor: [9, 9]
             })
           });
         },
-        router: orsRouter
+        router: new ORSRouter()
       }).addTo(map);
 
-      routingControl.on("routesfound", function(e) {
+      routingControl.on("routesfound", (e) => {
         const r = e.routes && e.routes[0];
-        if (!r || !r.summary) return;
-        updateStats(r.summary.totalDistance, r.summary.totalTime);
+        if (!r) return;
+        routeLineLatLngs = r.coordinates || [];
+        setStats(r.summary.totalDistance || 0, r.summary.totalTime || 0);
       });
 
-      routingControl.on("routingerror", function(e) {
-        // Αν αποτύχει ORS, μη μένεις ξεκρέμαστος, δείξε μήνυμα και πρότεινε Manual
-        console.warn("Routing error:", e);
-        // Δεν πετάμε alert κάθε φορά για να μην είναι σπαστικό
+      routingControl.on("waypointschanged", () => {
+        // keep internal waypoints in sync, so Save GPX uses the real route
+        const wps = routingControl.getWaypoints().map(w => w.latLng).filter(Boolean);
+        routeWaypoints = wps;
+      });
+
+      routingControl.on("routingerror", () => {
+        // Auto fallback to Manual if ORS fails
+        manual = true;
+        btnManual.textContent = "Manual: ON";
+        if (routingControl) { map.removeControl(routingControl); routingControl = null; }
+        renderManual();
+        alert("Auto routing απέτυχε (ORS). Μπήκα σε Manual.");
       });
     }
 
-    // =========================
-    // 5) UI HELPERS
-    // =========================
-    function updateStats(distMeters, timeSeconds) {
-      const km = (distMeters / 1000) || 0;
-      const mins = Math.round((timeSeconds || 0) / 60);
-      document.getElementById("distVal").innerText = km.toFixed(2);
-      document.getElementById("timeVal").innerText = mins + "λ";
-    }
-
-    function resetStats() {
-      document.getElementById("distVal").innerText = "0.00";
-      document.getElementById("timeVal").innerText = "0λ";
-    }
-
-    function updateButtons() {
-      const has2 = routeWaypoints.length >= 2;
-      document.getElementById("undoBtn").disabled = !isPlanning || routeWaypoints.length === 0;
-      document.getElementById("modeBtn").disabled = !isPlanning;
-      document.getElementById("saveBtn").disabled = !isPlanning || !has2;
-      document.getElementById("exitBtn").disabled = !isPlanning;
-
-      document.getElementById("undoBtn2").disabled = !isPlanning || routeWaypoints.length === 0;
-      document.getElementById("modeBtn2").disabled = !isPlanning;
-      document.getElementById("saveBtn2").disabled = !isPlanning || !has2;
-      document.getElementById("exitBtn2").disabled = !isPlanning;
-
-      const label = isManualMode ? "🤖 Auto" : "✍️ Manual";
-      document.getElementById("modeBtn").innerText = label;
-      document.getElementById("modeBtn2").innerText = label;
-    }
-
-    function setPlannerVisible(vis) {
-      document.getElementById("planner").style.display = vis ? "block" : "none";
-    }
-
-    // =========================
-    // 6) MANUAL MODE (always works)
-    // =========================
     function renderManual() {
       manualLayer.clearLayers();
-      if (routeWaypoints.length === 0) { resetStats(); return; }
+      if (routeWaypoints.length < 2) { setStats(0, 0); return; }
 
-      // markers
-      routeWaypoints.forEach((pt) => {
-        L.marker(pt, {
-          icon: L.divIcon({
-            className: "custom-div-icon",
-            html: '<div style="background:#8e44ad;width:18px;height:18px;border-radius:50%;border:2px solid #fff;"></div>',
-            iconSize: [18,18],
-            iconAnchor: [9,9]
-          })
-        }).addTo(manualLayer);
+      const poly = L.polyline(routeWaypoints, { color: "#ff8c00", weight: 7, opacity: 0.9, dashArray: "10,8" }).addTo(manualLayer);
+      routeLineLatLngs = routeWaypoints.slice();
+
+      routeWaypoints.forEach((p) => {
+        L.circleMarker(p, { radius: 6, color: "#8e44ad", weight: 2, fillColor: "#8e44ad", fillOpacity: 1 }).addTo(manualLayer);
       });
 
-      if (routeWaypoints.length >= 2) {
-        manualLine = L.polyline(routeWaypoints, { color:"#8e44ad", weight:6, opacity:0.9, dashArray:"10,10" }).addTo(manualLayer);
-
-        // distance
-        let dist = 0;
-        for (let i=0; i<routeWaypoints.length-1; i++) {
-          dist += map.distance(routeWaypoints[i], routeWaypoints[i+1]);
-        }
-        // estimate time at 4 km/h
-        const km = dist/1000;
-        const mins = Math.round((km/4) * 60);
-        updateStats(dist, mins*60);
-      } else {
-        resetStats();
-      }
+      let dist = 0;
+      for (let i = 0; i < routeWaypoints.length - 1; i++) dist += map.distance(routeWaypoints[i], routeWaypoints[i+1]);
+      const dur = (dist / 1000) / 4.0 * 3600; // ~4km/h
+      setStats(dist, dur);
     }
 
-    // =========================
-    // 7) ORS MODE
-    // =========================
-    function renderORS() {
-      manualLayer.clearLayers();
-      if (!routingControl) initRoutingControl();
-      routingControl.setWaypoints(routeWaypoints.map(ll => L.Routing.waypoint(ll)));
-      if (routeWaypoints.length < 2) resetStats();
-    }
+    function addPlannerPoint(latlng) {
+      routeWaypoints.push(latlng);
 
-    function rerender() {
-      if (!isPlanning) return;
-      if (isManualMode) renderManual();
-      else renderORS();
-      updateButtons();
-    }
-
-    // =========================
-    // 8) START/STOP PLANNER
-    // =========================
-    function startPlanner() {
-      isPlanning = true;
-      isManualMode = false; // start in ORS (like Wikiloc)
-      routeWaypoints = [];
-      resetStats();
-      setPlannerVisible(true);
-      if (!routingControl) initRoutingControl();
-      routingControl.setWaypoints([]);
-      manualLayer.clearLayers();
-      map.getContainer().style.cursor = "crosshair";
-      updateButtons();
-    }
-
-    function stopPlanner() {
-      isPlanning = false;
-      routeWaypoints = [];
-      resetStats();
-      setPlannerVisible(false);
-      manualLayer.clearLayers();
-      if (routingControl) {
-        routingControl.setWaypoints([]);
-      }
-      map.getContainer().style.cursor = "";
-      updateButtons();
-    }
-
-    // =========================
-    // 9) GPX EXPORT (planned route)
-    //    In ORS mode we export the computed route geometry (if available),
-    //    else fallback to waypoints.
-    // =========================
-    function exportPlannedGpx() {
-      if (routeWaypoints.length < 2) {
-        alert("Βάλε τουλάχιστον 2 σημεία.");
+      if (manual) {
+        renderManual();
         return;
       }
 
-      let coords = [];
+      if (!routingControl) initRouting();
+      routingControl.setWaypoints(routeWaypoints);
+    }
 
-      if (!isManualMode && routingControl && routingControl._routes && routingControl._routes.length > 0) {
-        coords = routingControl._routes[0].coordinates || [];
+    btnPlan.addEventListener("click", () => {
+      planning = !planning;
+      btnPlan.textContent = planning ? "Τέλος" : "Σχεδίαση";
+      if (planning) {
+        map.getContainer().style.cursor = "crosshair";
+        if (!manual) initRouting();
+      } else {
+        map.getContainer().style.cursor = "";
       }
+    });
 
-      if (!coords || coords.length < 2) {
-        // fallback
-        coords = routeWaypoints;
+    btnManual.addEventListener("click", () => {
+      manual = !manual;
+      btnManual.textContent = manual ? "Manual: ON" : "Manual: OFF";
+
+      if (manual) {
+        if (routingControl) { map.removeControl(routingControl); routingControl = null; }
+        renderManual();
+      } else {
+        manualLayer.clearLayers();
+        initRouting();
+        routingControl.setWaypoints(routeWaypoints);
       }
+    });
 
-      const now = new Date();
-      const date = now.toISOString().slice(0,10);
-      const name = "Parnitha_Plan_" + date;
+    btnUndo.addEventListener("click", () => {
+      if (!routeWaypoints.length) return;
+      routeWaypoints.pop();
+      if (manual) renderManual();
+      else if (routingControl) routingControl.setWaypoints(routeWaypoints);
+      else initRouting();
+    });
 
+    btnClear.addEventListener("click", () => {
+      clearPlanner();
+    });
+
+    map.on("click", (e) => {
+      if (!planning) return;
+      addPlannerPoint(e.latlng);
+    });
+
+    // 6) Save GPX (uses routed geometry if available, else waypoints)
+    function toGpx(latlngs) {
       let gpx = '<?xml version="1.0" encoding="UTF-8"?>\n';
-      gpx += '<gpx version="1.1" creator="ParnithaMap" xmlns="http://www.topografix.com/GPX/1/1">\n';
-      gpx += '  <trk>\n';
-      gpx += `    <name>${name}</name>\n`;
-      gpx += '    <trkseg>\n';
-      coords.forEach(pt => {
-        gpx += `      <trkpt lat="${pt.lat}" lon="${pt.lng}"></trkpt>\n`;
+      gpx += '<gpx version="1.1" creator="ParnithaMap">\n';
+      gpx += '  <trk><name>Planned Route</name><trkseg>\n';
+      latlngs.forEach((p) => {
+        gpx += '    <trkpt lat="' + p.lat + '" lon="' + p.lng + '"></trkpt>\n';
       });
-      gpx += '    </trkseg>\n';
-      gpx += '  </trk>\n';
-      gpx += '</gpx>\n';
+      gpx += '  </trkseg></trk>\n</gpx>\n';
+      return gpx;
+    }
 
+    btnSaveGpx.addEventListener("click", () => {
+      if (routeWaypoints.length < 2) { alert("Βάλε τουλάχιστον 2 σημεία."); return; }
+      const line = (routeLineLatLngs && routeLineLatLngs.length >= 2) ? routeLineLatLngs : routeWaypoints;
+      const gpx = toGpx(line);
       const blob = new Blob([gpx], { type: "application/gpx+xml" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = name + ".gpx";
+      a.download = "planned_route.gpx";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    }
-
-    // =========================
-    // 10) EVENTS
-    // =========================
-    map.on("click", function(e) {
-      if (!isPlanning) return;
-      routeWaypoints.push(e.latlng);
-      rerender();
     });
 
-    // Buttons (top)
-    document.getElementById("homeBtn").addEventListener("click", () => map.setView([38.168, 23.722], 14));
-    document.getElementById("planBtn").addEventListener("click", () => isPlanning ? stopPlanner() : startPlanner());
-    document.getElementById("undoBtn").addEventListener("click", () => { routeWaypoints.pop(); rerender(); });
-    document.getElementById("modeBtn").addEventListener("click", () => { isManualMode = !isManualMode; rerender(); });
-    document.getElementById("saveBtn").addEventListener("click", exportPlannedGpx);
-    document.getElementById("exitBtn").addEventListener("click", stopPlanner);
+    // 7) Load GPX
+    const gpxLayer = L.layerGroup().addTo(map);
+    btnLoadGpx.addEventListener("click", () => file.click());
+    file.addEventListener("change", (ev) => {
+      const f = ev.target.files && ev.target.files[0];
+      if (!f) return;
+      const url = URL.createObjectURL(f);
+      gpxLayer.clearLayers();
+      new L.GPX(url, { async: true, polyline_options: { color: "#1e88e5", weight: 5, opacity: 0.85 } })
+        .on("loaded", (e) => {
+          map.fitBounds(e.target.getBounds());
+        })
+        .addTo(gpxLayer);
+      ev.target.value = "";
+    });
 
-    // Buttons (panel)
-    document.getElementById("undoBtn2").addEventListener("click", () => { routeWaypoints.pop(); rerender(); });
-    document.getElementById("modeBtn2").addEventListener("click", () => { isManualMode = !isManualMode; rerender(); });
-    document.getElementById("saveBtn2").addEventListener("click", exportPlannedGpx);
-    document.getElementById("exitBtn2").addEventListener("click", stopPlanner);
-
-    // Start in normal view
-    updateButtons();
+    // 8) Small quality-of-life: prevent double-tap zoom on iOS if you prefer
+    // map.getContainer().style.touchAction = "manipulation";
   </script>
 </body>
 </html>
